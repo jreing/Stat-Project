@@ -48,7 +48,8 @@ countFalseRejections<-function (rejects , refVec){
   
   fr<-0 #false rejections counter
   for (i in 1:rejects$length){ # count num of false rejects
-    if (refVec[rejects$ix[i]]==TRUE) { #if the rejection was false
+#     print (refVec)
+    if (refVec[rejects$ix[i]]==FALSE) { #if the rejection was false
       fr<-fr+1
     }
   }
@@ -122,7 +123,9 @@ setDesVector <-function (size, numOfZeros,mu=4){
 
 setRefVectorBig <-function(size, numOfZeros,mu){
   DesVector<-setDesVector(size,numOfZeros,mu)
-  return (!as.logical(dist(DesVector)))
+  print ("DesVector:")
+  print (DesVector)
+  return (as.logical(dist(DesVector)))
 }
 
 setRefVector <- function (size, numOfTrues){
@@ -201,16 +204,29 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1,
                                numOfTrues=1,
                                falsesMu1=mu
         ) #init family
-        familyArray[[i]]@refVec=setRefVectorBig(familyArray[[i]]@size,familyArray[[i]]@numOfTrues,mu)
-        #build reference Vector
+        
         
         if (i<6){ #first 5 families with signal
+          familyArray[[i]]@refVec=setRefVectorBig(
+            size=familyArray[[i]]@size,
+            numOfZeros=familyArray[[i]]@size-familyArray[[i]]@numOfTrues,
+            mu=mu)
+          print ("Reference vector:")
+          print (familyArray[[i]]@refVec)
+          #build reference Vector
           familyArray[[i]]@xbars=getRandomXBars(familyArray[[i]]@size,
                                                 numOfTrues=familySize-1,
                                                 falsesMu1=mu,
                                                 sd=sqrt(1/groupSize))
                   }
         else { #35 families no signal
+          familyArray[[i]]@refVec=setRefVectorBig(
+            size=familyArray[[i]]@size,
+            numOfZeros=familyArray[[i]]@size,
+            mu=mu)
+          print ("Reference vector:")
+          print (familyArray[[i]]@refVec)
+          #build reference Vector
           familyArray[[i]]@xbars=getRandomXBars(familyArray[[i]]@size,
                                                 numOfTrues=1,
                                                 falsesMu1=0,
@@ -285,7 +301,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1,
 #               readline()
             }
             
-            #calc frs,power,fdr,dwer for the ith selectedfamily
+            #calc frs,power,fdr,fwer for the ith selectedfamily
             familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@fr=
               countFalseRejections(
                 familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@rejects,
@@ -329,18 +345,19 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1,
           TotalOvrFDR[methodix, iters]<- OverallFR[methodix]/OverallRejectsLength[methodix]
           TotalOvrFWER[methodix, iters]<-sign(TotalOvrFDR[methodix, iters])
           
-#           print (c("Average FDR:", FDRSum[methodix]/SelectedFamilies[[methodix]]$length))
-#           print (c("Overall FDR: ",  OverallFR[methodix]/OverallRejectsLength[methodix]))
-#           print (c("Average FWER: ", FWERSum[methodix]/SelectedFamilies[[methodix]]$length))
-#           print (c("Overall FR: ", OverallFR[methodix]))
-#           print ("Interesting Families () are")
-#           print (SelectedFamilies[[methodix]])
+          print (c("Iteration:", iters, "mu1:", mu, "method:", methodix))
+          print (c("Average FDR:", FDRSum[methodix]/SelectedFamilies[[methodix]]$length))
+          print (c("Overall FDR: ",  OverallFR[methodix]/OverallRejectsLength[methodix]))
+          print (c("Average FWER: ", FWERSum[methodix]/SelectedFamilies[[methodix]]$length))
+          print (c("Overall FR: ", OverallFR[methodix]))
+          print (c("Interesting Families () are",SelectedFamilies[[methodix]]))
+          #readline()
          
           
         } #end if selected families exist
         else {
           #"no selected families in iteration - all stats  are 0"
-#           print ("no families selected")
+           print ("no families selected")
           TotalAVGFDR[methodix,iters]<-0
           TotalAVGFWER[methodix,iters]<-0
           TotalOvrFWER[methodix,iters]<-0
@@ -522,4 +539,4 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1,
 }
 
 #tukeyTest2(n=100)
-tukeyTest2(n=10, familySize=5,minMu1=2, maxMu1=4)
+tukeyTest2(n=100, familySize=5,minMu1=4, maxMu1=4,details=TRUE)
