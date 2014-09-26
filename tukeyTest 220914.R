@@ -123,8 +123,8 @@ setDesVector <-function (size, numOfZeros,mu=4){
 
 setRefVectorBig <-function(size, numOfZeros,mu){
   DesVector<-setDesVector(size,numOfZeros,mu)
-  print ("DesVector:")
-  print (DesVector)
+#   print ("DesVector:")
+#   print (DesVector)
   return (as.logical(dist(DesVector)))
 }
 
@@ -211,8 +211,8 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1,
             size=familyArray[[i]]@size,
             numOfZeros=familyArray[[i]]@size-familyArray[[i]]@numOfTrues,
             mu=mu)
-          print ("Reference vector:")
-          print (familyArray[[i]]@refVec)
+#           print ("Reference vector:")
+#           print (familyArray[[i]]@refVec)
           #build reference Vector
           familyArray[[i]]@xbars=getRandomXBars(familyArray[[i]]@size,
                                                 numOfTrues=familySize-1,
@@ -224,8 +224,8 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1,
             size=familyArray[[i]]@size,
             numOfZeros=familyArray[[i]]@size,
             mu=mu)
-          print ("Reference vector:")
-          print (familyArray[[i]]@refVec)
+#           print ("Reference vector:")
+#           print (familyArray[[i]]@refVec)
           #build reference Vector
           familyArray[[i]]@xbars=getRandomXBars(familyArray[[i]]@size,
                                                 numOfTrues=1,
@@ -233,8 +233,8 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1,
                                                 sd=sqrt(1/groupSize))
             }
         if (details==TRUE){
-          print (i)
-          print (familyArray[[i]]@xbars)         
+#           print (i)
+#           print (familyArray[[i]]@xbars)         
         } #end details print
         
         familyArray[[i]]@pvals=calcPairwisePVals(familyArray[[i]]@xbars,
@@ -536,7 +536,8 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1,
     print (AVGFRMeans)
     print ("AVG FWER: ")
     print (AVGFWERMeans)
+    write.csv(TotalAVGFDR, file = "tukeyTest2.csv")
 }
 
 #tukeyTest2(n=100)
-tukeyTest2(n=100, familySize=5,minMu1=4, maxMu1=4,details=TRUE)
+tukeyTest2(n=100, familySize=5,minMu1=0, maxMu1=4,details=TRUE)
