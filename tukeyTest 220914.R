@@ -1,5 +1,5 @@
 iteration <- setClass ("iteration",
-        #Data structure that holds data regarding a certain iteration (=manipulation of random numbers)        
+                       #Data structure that holds data regarding a certain iteration (=manipulation of random numbers)        
                        slots=c(xbars="numeric",
                                pvals="numeric",
                                refVec="logical",
@@ -11,7 +11,7 @@ iteration <- setClass ("iteration",
                        )
 )
 procedure <- setClass ("procedure",
-         #a data structure holding the results of certain procedure applied to an iteration
+                       #a data structure holding the results of certain procedure applied to an iteration
                        
                        slots=c(procedureName="function",
                                rejects="list",
@@ -23,6 +23,12 @@ procedure <- setClass ("procedure",
 )
 
 calcPower<-function (rejects, falseRejections, size,numOfTrues){
+  #returns num of  true rejections divided by the number of planned rejections
+  print ("POWER CALC:")
+  print (c("rejects:", rejects$length))
+  print (c("fr:", falseRejections))
+  print (c("size:", size))
+  print (c("numOfCorrectRejects:", size-numOfTrues))
   return ((rejects$length-falseRejections)/(size-numOfTrues))
 }
 
@@ -48,7 +54,7 @@ countFalseRejections<-function (rejects , refVec){
   
   fr<-0 #false rejections counter
   for (i in 1:rejects$length){ # count num of false rejects
-#     print (refVec)
+    #     print (refVec)
     if (refVec[rejects$ix[i]]==FALSE) { #if the rejection was false
       fr<-fr+1
     }
@@ -72,17 +78,17 @@ SelectFamiliesBH<-function (familiesSimesPVals){
 rejectTukey <- function (xbars,S,groupSize,qStar){
   statistics=as.numeric(dist(xbars)/sqrt(S/groupSize))
   b<-which(statistics>=qStar)
-
-#   print (statistics)
-#   print ("Q*")
-#   print (qStar)
-#   print (list("length"=length(b), "ix"=b))
+  
+  #   print (statistics)
+  #   print ("Q*")
+  #   print (qStar)
+  #   print (list("length"=length(b), "ix"=b))
   return (list("length"=length(b), "ix"=b))
 }
 
 Preject <- function (method="BH", pvals=c(0), details=FALSE, alpha =0.05){
   a<-p.adjust(p=pvals,method=method)
-#   print (a)
+  #   print (a)
   b<- which(a<alpha)
   return (list ("length"=length(b), "ix"=b))
 }
@@ -111,8 +117,8 @@ getRandomXBars <-function (size, numOfTrues, truesMu1=0, falsesMu1, sd=1){
   #define the null first families
   xbar[(numOfTrues+1):size]<- (rnorm(n=size-numOfTrues,mean=falsesMu1,sd=sd)) 
   #define the non-null last families   
-#   print (xbar)
-#   readline()
+  #   print (xbar)
+  #   readline()
   return (xbar)
 }
 setDesVector <-function (size, numOfZeros,mu=4){
@@ -123,18 +129,19 @@ setDesVector <-function (size, numOfZeros,mu=4){
 
 setRefVectorBig <-function(size, numOfZeros,mu){
   DesVector<-setDesVector(size,numOfZeros,mu)
-#   print ("DesVector:")
-#   print (DesVector)
+  #   print ("DesVector:")
+  #   print (DesVector)
   return (as.logical(dist(DesVector)))
 }
 
-setRefVector <- function (size, numOfTrues){
-  #initialize reference vector
-  refvec<-rep (NA,size)
-  refvec[1:numOfTrues]<- TRUE # these will be true discoveries
-  refvec[(numOfTrues+1):size]<- FALSE # these will be False Discoveries
-  return (refvec)
-}
+# this method works only for familySize=3, setRefVectorBig does this right for larger sizes
+# setRefVector <- function (size, numOfTrues){
+#   #initialize reference vector
+#   refvec<-rep (NA,size)
+#   refvec[1:numOfTrues]<- TRUE # these will be true discoveries
+#   refvec[(numOfTrues+1):size]<- FALSE # these will be False Discoveries
+#   return (refvec)
+# }
 
 
 #method A(3): OVerall BH (one level)
@@ -147,7 +154,7 @@ setRefVector <- function (size, numOfTrues){
 #are signal (=numOfTrues is used), and the rest of the families are with no signal (all mus are 0)
 #then uses 3 different methods to reject.
 tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1,
-                  minMu1=0, maxMu1=4, interval=0.5, alpha=0.05, groupSize=16,details=FALSE){
+                      minMu1=0, maxMu1=4, interval=0.5, alpha=0.05, groupSize=16,details=FALSE){
   
   #definition of constant df
   df=familySize*(groupSize-1) #calculate degs of freedom
@@ -172,11 +179,11 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1,
     TotalOvrFR<-matrix(0,4,n)
     TotalOvrFDR<-matrix(0,4,n)
     print (mu)
-  #     readline()
+    #     readline()
     
     #each iteration
     for (iters in 1:n){
-#       print (c("iter:" ,iters))
+      #       print (c("iter:" ,iters))
       
       #setup  of variables
       familyArray= list(numOfFamilies);
@@ -211,30 +218,31 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1,
             size=familyArray[[i]]@size,
             numOfZeros=familyArray[[i]]@size-familyArray[[i]]@numOfTrues,
             mu=mu)
-#           print ("Reference vector:")
-#           print (familyArray[[i]]@refVec)
+          #           print ("Reference vector:")
+          #           print (familyArray[[i]]@refVec)
           #build reference Vector
           familyArray[[i]]@xbars=getRandomXBars(familyArray[[i]]@size,
                                                 numOfTrues=familySize-1,
                                                 falsesMu1=mu,
                                                 sd=sqrt(1/groupSize))
-                  }
+        }
         else { #35 families no signal
           familyArray[[i]]@refVec=setRefVectorBig(
             size=familyArray[[i]]@size,
             numOfZeros=familyArray[[i]]@size,
             mu=mu)
-#           print ("Reference vector:")
-#           print (familyArray[[i]]@refVec)
-          #build reference Vector
+          #           print ("Reference vector:")
+          #           print (familyArray[[i]]@refVec)
+          #build reference Vector (we set numOfTrues as 1 and falsesMu1 as 0 so that all xbars are
+          #generated around 0, the value of numOfTrues doesnt matter here)
           familyArray[[i]]@xbars=getRandomXBars(familyArray[[i]]@size,
                                                 numOfTrues=1,
                                                 falsesMu1=0,
                                                 sd=sqrt(1/groupSize))
-            }
+        }
         if (details==TRUE){
-#           print (i)
-#           print (familyArray[[i]]@xbars)         
+          #           print (i)
+          #           print (familyArray[[i]]@xbars)         
         } #end details print
         
         familyArray[[i]]@pvals=calcPairwisePVals(familyArray[[i]]@xbars,
@@ -251,8 +259,8 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1,
         familiesTukeyPVals[i]=calcTukeyPVal(familyArray[[i]]@xbars
                                             ,S[i],groupSize, familySize)
         #calc Tukey PVals for method B(2)
-
-#         print (c("family tukey pval", i, familiesTukeyPVals[i]))
+        
+        #         print (c("family tukey pval", i, familiesTukeyPVals[i]))
         
         #add to jointFamily for methods 3-4
         jointFamily@refVec=append(jointFamily@refVec,familyArray[[i]]@refVec)
@@ -269,14 +277,14 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1,
       SelectedFamilies[[2]]<-SelectedFamilies[[1]] #for this stage selection for both methods is the same
       qStar=qtukey(p=1-alpha*SelectedFamilies[[1]]$length/numOfFamilies,
                    nmeans=familySize,df=df)
-#       print (familyArray[[i]]@pvals, qStar)
-#       print (SelectedFamilies[[1]])
-#       readline()
+      #       print (familyArray[[i]]@pvals, qStar)
+      #       print (SelectedFamilies[[1]])
+      #       readline()
       
       
       ##method 1/2 step 2: #process BH/QTukey on selected families
       for (methodix in 1:2){ #run through methods
-        if (SelectedFamilies[[methodix]]$length>0){	 #if there are any selected families
+        if (SelectedFamilies[[methodix]]$length>0){   #if there are any selected families
           for (i in 1:SelectedFamilies[[methodix]]$length){ #run thru selected families
             
             if (methodix==1){
@@ -293,12 +301,12 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1,
               # reject inside the selected families with QTUKEY threshold
               familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[2]]@rejects<-
                 rejectTukey( familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@xbars,
-                            S[SelectedFamilies[[methodix]]$ix[i]],
-                            groupSize,
-                            qStar)
-#               print (dist(familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@xbars))
-#               print (familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@refVec)
-#               readline()
+                             S[SelectedFamilies[[methodix]]$ix[i]],
+                             groupSize,
+                             qStar)
+              #               print (dist(familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@xbars))
+              #               print (familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@refVec)
+              #               readline()
             }
             
             #calc frs,power,fdr,fwer for the ith selectedfamily
@@ -306,40 +314,40 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1,
               countFalseRejections(
                 familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@rejects,
                 familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@refVec)
-
+            
             familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@power=
               calcPower(familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@rejects,
                         familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@fr, 
                         familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@size, 
                         familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@numOfTrues)
-
+            
             familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@fdr=
               calcFDR(familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@rejects,
                       familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@fr)
-          
+            
             familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@fwer=
               calcFWER(familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@rejects,
                        familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@fr)
-           if (details==TRUE){ 
+            if (details==TRUE){ 
               print (c("Family number:", SelectedFamilies[[methodix]]$ix[i]))
               print (c("FRs:", familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@fr))
               print (c("FDR:", familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@fdr))
               print (c("FWER: ", familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@fwer))
               print (c("Power: ", familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@power))
               print (c("Rejects:", familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@rejects$length))
-             } #end details print
+            } #end details print
             FDRSum[methodix]=FDRSum[methodix]+familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@fdr
             FWERSum[methodix]=FWERSum[methodix]+familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@fwer					
             OverallFR[methodix]=OverallFR[methodix]+familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@fr
             OverallRejectsLength[methodix]=OverallRejectsLength[methodix]+familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@
-                                          proceduresApplied[[methodix]]@rejects$length
+            proceduresApplied[[methodix]]@rejects$length
             
           } #end for loop of i selected families     
-#           print (c("OVERALL REJECTS LENGTH method :", methodix ,OverallRejectsLength[methodix]))
-            
+          #           print (c("OVERALL REJECTS LENGTH method :", methodix ,OverallRejectsLength[methodix]))
+          
           TotalAVGFDR[methodix, iters]<-FDRSum[methodix]/SelectedFamilies[[methodix]]$length
           TotalAVGFWER[methodix, iters]<-FWERSum[methodix]/SelectedFamilies[[methodix]]$length
-          TotalOvrPower[methodix, iters]<- (OverallRejectsLength[methodix]-OverallFR[methodix])/(40*(familySize-numOfTrues))
+          TotalOvrPower[methodix, iters]<- (OverallRejectsLength[methodix]-OverallFR[methodix])/(numOfFamilies*(familySize-numOfTrues))
           TotalOvrFR[methodix, iters]<-OverallFR[methodix]
           TotalAVGFR[methodix, iters]<-OverallFR[methodix]/SelectedFamilies[[methodix]]$length
           TotalOvrFDR[methodix, iters]<- OverallFR[methodix]/OverallRejectsLength[methodix]
@@ -352,12 +360,12 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1,
           print (c("Overall FR: ", OverallFR[methodix]))
           print (c("Interesting Families () are",SelectedFamilies[[methodix]]))
           #readline()
-         
+          
           
         } #end if selected families exist
         else {
           #"no selected families in iteration - all stats  are 0"
-           print ("no families selected")
+          print ("no families selected")
           TotalAVGFDR[methodix,iters]<-0
           TotalAVGFWER[methodix,iters]<-0
           TotalOvrFWER[methodix,iters]<-0
@@ -374,10 +382,10 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1,
           #method 3 - overall BH - take joint family and reject in it using BH
           jointFamily@proceduresApplied[[methodix-2]]@rejects=Preject(method="BH", pvals=jointFamily@pvals, alpha=0.05)
         }
-#         if (methodix==4){
-#           jointFamily@proceduresApplied[[methodix-2]]@rejects=Preject(method="bon", pvals=jointFamily@pvals, alpha=0.05)
-#         }
-#         
+        #         if (methodix==4){
+        #           jointFamily@proceduresApplied[[methodix-2]]@rejects=Preject(method="bon", pvals=jointFamily@pvals, alpha=0.05)
+        #         }
+        #         
         #calc stats for joint family
         jointFamily@proceduresApplied[[methodix-2]]@fr=countFalseRejections(jointFamily@proceduresApplied[[methodix-2]]@rejects,jointFamily@refVec)
         jointFamily@proceduresApplied[[methodix-2]]@power=calcPower(jointFamily@proceduresApplied[[methodix-2]]@rejects,
@@ -436,7 +444,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1,
         main =c("Overall Power/mu1 in", n, "iterations with methods 1-2"), type="o")
   lines (seq(minMu1,maxMu1,interval),OvrPowerMeans[2,], col="red", type="o")
   lines (seq(minMu1,maxMu1,interval),OvrPowerMeans[3,], col="green", type="o")
-#   lines (seq(minMu1,maxMu1,interval),OvrPowerMeans[4,], col="pink", type="o")
+  #   lines (seq(minMu1,maxMu1,interval),OvrPowerMeans[4,], col="pink", type="o")
   
   
   legend("topleft", 
@@ -453,7 +461,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1,
   lines (seq(minMu1,maxMu1,interval),AVGFDRMeans[2,], col="green", type="o")
   lines (seq(minMu1,maxMu1,interval),OvrFDRMeans[2,], col="pink", type="o")
   lines (seq(minMu1,maxMu1,interval),OvrFDRMeans[3,], col="brown", type="o")
-#   lines (seq(minMu1,maxMu1,interval),OvrFDRMeans[4,], col="cyan", type="o")
+  #   lines (seq(minMu1,maxMu1,interval),OvrFDRMeans[4,], col="cyan", type="o")
   abline (h=0.05, col="black")
   
   legend("topleft", 
@@ -470,7 +478,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1,
   lines (seq(minMu1,maxMu1,interval),AVGFWERMeans[2,], col="green", type="o")
   lines (seq(minMu1,maxMu1,interval),OvrFWERMeans[2,], col="pink", type="o")
   lines (seq(minMu1,maxMu1,interval),OvrFWERMeans[3,], col="brown", type="o")
-#   lines (seq(minMu1,maxMu1,interval),OvrFWERMeans[4,], col="cyan", type="o")
+  #   lines (seq(minMu1,maxMu1,interval),OvrFWERMeans[4,], col="cyan", type="o")
   abline (h=0.05, col="black")
   
   legend("topleft", 
@@ -488,7 +496,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1,
   lines (seq(minMu1,maxMu1,interval),AVGFRMeans[2,], col="green", type="o")
   lines (seq(minMu1,maxMu1,interval),OvrFRMeans[2,], col="pink", type="o")
   lines (seq(minMu1,maxMu1,interval),OvrFRMeans[3,], col="brown", type="o")
-#   lines (seq(minMu1,maxMu1,interval),OvrFRMeans[4,], col="cyan", type="o")
+  #   lines (seq(minMu1,maxMu1,interval),OvrFRMeans[4,], col="cyan", type="o")
   abline (h=0.05, col="black")
   
   legend("topleft", 
@@ -501,7 +509,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1,
   plot (seq(minMu1,maxMu1,interval),AVGFWERMeans[1,] , col="blue", ylim=c(0,0.1),
         ylab="FWER/E[V]", xlab="mu",
         main =c("Avg FWER and Avg E[V]/mu1 in", n, "iterations with methods 1,2"), type="o")
-#    readline()
+  #    readline()
   lines (seq(minMu1,maxMu1,interval),AVGFRMeans[1,], col="red", type="o")
   lines (seq(minMu1,maxMu1,interval),AVGFWERMeans[2,], col="green", type="o")
   lines (seq(minMu1,maxMu1,interval),AVGFRMeans[2,], col="pink", type="o")
@@ -514,30 +522,30 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1,
          col=c("blue","red", "green", "pink")
   )
   #change column names in table
-    colnames(OvrPowerMeans)<-seq(minMu1,maxMu1,interval)
-    colnames(OvrFDRMeans)<-seq(minMu1,maxMu1,interval)
-    colnames(AVGFDRMeans)<-seq(minMu1,maxMu1,interval)
-    colnames(OvrFWERMeans)<-seq(minMu1,maxMu1,interval)
-    colnames(OvrFRMeans)<-seq(minMu1,maxMu1,interval)
-    colnames(AVGFRMeans)<-seq(minMu1,maxMu1,interval)
-    colnames(AVGFWERMeans)<-seq(minMu1,maxMu1,interval)
-
-    print ("OVERALL POWER:")
-    print(OvrPowerMeans)
-    print ("AVG FDR:")
-    print( AVGFDRMeans)
-    print ("OVERALL FDR:")
-    print( OvrFDRMeans)
-    print ("OVERALL FWER:")
-    print(OvrFWERMeans)
-    print ("OVERALL E[V]:")
-    print(OvrFRMeans)
-    print ("AVG E[V]: ")
-    print (AVGFRMeans)
-    print ("AVG FWER: ")
-    print (AVGFWERMeans)
-    write.csv(TotalAVGFDR, file = "tukeyTest2.csv")
+  colnames(OvrPowerMeans)<-seq(minMu1,maxMu1,interval)
+  colnames(OvrFDRMeans)<-seq(minMu1,maxMu1,interval)
+  colnames(AVGFDRMeans)<-seq(minMu1,maxMu1,interval)
+  colnames(OvrFWERMeans)<-seq(minMu1,maxMu1,interval)
+  colnames(OvrFRMeans)<-seq(minMu1,maxMu1,interval)
+  colnames(AVGFRMeans)<-seq(minMu1,maxMu1,interval)
+  colnames(AVGFWERMeans)<-seq(minMu1,maxMu1,interval)
+  
+  print ("OVERALL POWER:")
+  print(OvrPowerMeans)
+  print ("AVG FDR:")
+  print( AVGFDRMeans)
+  print ("OVERALL FDR:")
+  print( OvrFDRMeans)
+  print ("OVERALL FWER:")
+  print(OvrFWERMeans)
+  print ("OVERALL E[V]:")
+  print(OvrFRMeans)
+  print ("AVG E[V]: ")
+  print (AVGFRMeans)
+  print ("AVG FWER: ")
+  print (AVGFWERMeans)
+  write.csv(TotalAVGFDR, file = "tukeyTest2.csv")
 }
 
 #tukeyTest2(n=100)
-tukeyTest2(n=100, familySize=5,minMu1=0, maxMu1=4,details=TRUE)
+tukeyTest2(n=1, familySize=5,minMu1=0, maxMu1=2,details=TRUE)
