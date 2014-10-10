@@ -22,14 +22,14 @@ procedure <- setClass ("procedure",
                        )
 )
 
-calcPower<-function (rejects, falseRejections, size,numOfTrues){
+calcPower<-function (rejects, falseRejections, size,numOfSupposedTrueFamilies){
   #returns num of  true rejections divided by the number of planned rejections
   print ("POWER CALC:")
   print (c("rejects:", rejects$length))
   print (c("fr:", falseRejections))
   print (c("size:", size))
-  print (c("numOfCorrectRejects:", size-numOfTrues))
-  return ((rejects$length-falseRejections)/(size-numOfTrues))
+  print (c("numOfCorrectRejects:", size-numOfSupposedTrueFamilies))
+  return ((rejects$length-falseRejections)/(size-numOfSupposedTrueFamilies))
 }
 
 calcFDR<- function (rejects,falseRejections){
@@ -153,7 +153,7 @@ setRefVectorBig <-function(size, numOfZeros,mu){
 #with "numOfTrues" trues and the rest of the families are false, with 5 families in which there 
 #are signal (=numOfTrues is used), and the rest of the families are with no signal (all mus are 0)
 #then uses 3 different methods to reject.
-tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1,
+tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1, numOfSignalFamilies=5,
                       minMu1=0, maxMu1=4, interval=0.5, alpha=0.05, groupSize=16,details=FALSE){
   
   #definition of constant df
@@ -196,46 +196,50 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1,
       FDRSum <-numeric(2)
       FWERSum <- numeric(2)
       jointFamily <- new ("iteration",
-                          size=familySize*numOfFamilies,
-                          numOfTrues=numOfTrues*numOfFamilies,
+                          size=choose(familySize,2)*numOfFamilies,
+                          numOfTrues=(numOfFamilies-numOfSignalFamilies)*choose(familySize,2)+
+                            #num of true hypotheses in the no signal zone
+                            numOfSignalFamilies*(familySize-1),
+                            #num of true hypotheses in the signal zone
                           falsesMu1=mu
       )
-      
+#       print (jointFamily)
+#       readline()
       ##init variance vector
       S=rchisq(n=numOfFamilies,df=df)/df
       
       for (i in 1:numOfFamilies){
         
         familyArray[[i]]= new ("iteration",
-                               size=familySize,
+                               size=choose (familySize,2),
                                numOfTrues=1,
                                falsesMu1=mu
         ) #init family
         
         
-        if (i<6){ #first 5 families with signal
+        if (i<=numOfSignalFamilies){ #first 5 families with signal
           familyArray[[i]]@refVec=setRefVectorBig(
-            size=familyArray[[i]]@size,
-            numOfZeros=familyArray[[i]]@size-familyArray[[i]]@numOfTrues,
+            size=familySize,
+            numOfZeros=familySize-numOfTrues,
             mu=mu)
           #           print ("Reference vector:")
           #           print (familyArray[[i]]@refVec)
           #build reference Vector
-          familyArray[[i]]@xbars=getRandomXBars(familyArray[[i]]@size,
+          familyArray[[i]]@xbars=getRandomXBars(size=familySize,
                                                 numOfTrues=familySize-1,
                                                 falsesMu1=mu,
                                                 sd=sqrt(1/groupSize))
         }
         else { #35 families no signal
           familyArray[[i]]@refVec=setRefVectorBig(
-            size=familyArray[[i]]@size,
-            numOfZeros=familyArray[[i]]@size,
+            size=familySize,
+            numOfZeros=familySize,
             mu=mu)
           #           print ("Reference vector:")
           #           print (familyArray[[i]]@refVec)
           #build reference Vector (we set numOfTrues as 1 and falsesMu1 as 0 so that all xbars are
           #generated around 0, the value of numOfTrues doesnt matter here)
-          familyArray[[i]]@xbars=getRandomXBars(familyArray[[i]]@size,
+          familyArray[[i]]@xbars=getRandomXBars(size=familySize,
                                                 numOfTrues=1,
                                                 falsesMu1=0,
                                                 sd=sqrt(1/groupSize))
@@ -249,7 +253,9 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1,
                                                  S,
                                                  groupSize,
                                                  familySize,
-                                                 i=i)
+                                                 i=i,
+                                                 details=FALSE)
+       
         #calc Pairwise PVals for Method C(1)
         
         familyArray[[i]]@proceduresApplied=append(familyArray[[i]]@proceduresApplied,
@@ -319,7 +325,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1,
               calcPower(familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@rejects,
                         familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@fr, 
                         familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@size, 
-                        familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@numOfTrues)
+                        length(which(familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@refVec==FALSE)))
             
             familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@fdr=
               calcFDR(familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@rejects,
