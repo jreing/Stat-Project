@@ -22,14 +22,15 @@ procedure <- setClass ("procedure",
                        )
 )
 
-calcPower<-function (rejects, falseRejections, size,numOfSupposedTrueFamilies){
+calcPower<-function (rejectsLength, falseRejections, size,numOfSupposedTrueFamilies){
   #returns num of  true rejections divided by the number of planned rejections
   print ("POWER CALC:")
-  print (c("rejects:", rejects$length))
+  print (c("rejects:", rejectsLength))
   print (c("fr:", falseRejections))
   print (c("size:", size))
-  print (c("numOfCorrectRejects:", size-numOfSupposedTrueFamilies))
-  return ((rejects$length-falseRejections)/(size-numOfSupposedTrueFamilies))
+  print (c("numOfCorrectRejects:", numOfSupposedTrueFamilies))
+  print (c("Power",(rejectsLength-falseRejections)/(size-numOfSupposedTrueFamilies)))
+  return ((rejectsLength-falseRejections)/(size-numOfSupposedTrueFamilies))
 }
 
 calcFDR<- function (rejects,falseRejections){
@@ -212,7 +213,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1, num
         
         familyArray[[i]]= new ("iteration",
                                size=choose (familySize,2),
-                               numOfTrues=1,
+                               numOfTrues=numOfTrues, #=1
                                falsesMu1=mu
         ) #init family
         
@@ -245,8 +246,8 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1, num
                                                 sd=sqrt(1/groupSize))
         }
         if (details==TRUE){
-          #           print (i)
-          #           print (familyArray[[i]]@xbars)         
+#                    print (i)
+#                    print (familyArray[[i]]@xbars)         
         } #end details print
         
         familyArray[[i]]@pvals=calcPairwisePVals(familyArray[[i]]@xbars,
@@ -278,6 +279,10 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1, num
                                              new ("procedure"))
       } #end for i
       
+      if (details==TRUE){
+#         print (jointFamily)
+      }
+
       #method B,C step 1: select interesting families using BH
       SelectedFamilies[[1]]<-SelectFamiliesBH(familiesTukeyPVals)
       SelectedFamilies[[2]]<-SelectedFamilies[[1]] #for this stage selection for both methods is the same
@@ -322,10 +327,10 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1, num
                 familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@refVec)
             
             familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@power=
-              calcPower(familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@rejects,
+              calcPower(familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@rejects$length,
                         familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@fr, 
                         familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@size, 
-                        length(which(familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@refVec==FALSE)))
+                        length(which(familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@refVec==TRUE)))
             
             familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@fdr=
               calcFDR(familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@rejects,
@@ -346,14 +351,24 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1, num
             FWERSum[methodix]=FWERSum[methodix]+familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@fwer					
             OverallFR[methodix]=OverallFR[methodix]+familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@fr
             OverallRejectsLength[methodix]=OverallRejectsLength[methodix]+familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@
-            proceduresApplied[[methodix]]@rejects$length
+                                           proceduresApplied[[methodix]]@rejects$length
             
+#             OverallRejectsLength[methodix]=append(OverallRejectsLength[methodix],
+#                                                   familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@
+#                                                   proceduresApplied[[methodix]]@rejects)
+
+
           } #end for loop of i selected families     
           #           print (c("OVERALL REJECTS LENGTH method :", methodix ,OverallRejectsLength[methodix]))
           
           TotalAVGFDR[methodix, iters]<-FDRSum[methodix]/SelectedFamilies[[methodix]]$length
           TotalAVGFWER[methodix, iters]<-FWERSum[methodix]/SelectedFamilies[[methodix]]$length
-          TotalOvrPower[methodix, iters]<- (OverallRejectsLength[methodix]-OverallFR[methodix])/(numOfFamilies*(familySize-numOfTrues))
+          TotalOvrPower[methodix, iters]<- calcPower(rejects=OverallRejectsLength[methodix],
+                                                     falseRejections=OverallFR[methodix],
+                                                     size=jointFamily@size,
+                                                     numOfSupposedTrueFamilies=jointFamily@numOfTrues
+            ) 
+#             (OverallRejectsLength[methodix]-OverallFR[methodix])/(numOfFamilies*(familySize-numOfTrues))
           TotalOvrFR[methodix, iters]<-OverallFR[methodix]
           TotalAVGFR[methodix, iters]<-OverallFR[methodix]/SelectedFamilies[[methodix]]$length
           TotalOvrFDR[methodix, iters]<- OverallFR[methodix]/OverallRejectsLength[methodix]
@@ -394,7 +409,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1, num
         #         
         #calc stats for joint family
         jointFamily@proceduresApplied[[methodix-2]]@fr=countFalseRejections(jointFamily@proceduresApplied[[methodix-2]]@rejects,jointFamily@refVec)
-        jointFamily@proceduresApplied[[methodix-2]]@power=calcPower(jointFamily@proceduresApplied[[methodix-2]]@rejects,
+        jointFamily@proceduresApplied[[methodix-2]]@power=calcPower(jointFamily@proceduresApplied[[methodix-2]]@rejects$length,
                                                                     jointFamily@proceduresApplied[[methodix-2]]@fr, jointFamily@size, jointFamily@numOfTrues)
         jointFamily@proceduresApplied[[methodix-2]]@fdr=calcFDR(jointFamily@proceduresApplied[[methodix-2]]@rejects,
                                                                 jointFamily@proceduresApplied[[methodix-2]]@fr)
@@ -554,4 +569,4 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1, num
 }
 
 #tukeyTest2(n=100)
-tukeyTest2(n=1, familySize=5,minMu1=0, maxMu1=2,details=TRUE)
+tukeyTest2(n=10, familySize=5,minMu1=0, maxMu1=5,details=TRUE)
