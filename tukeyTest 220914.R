@@ -1,3 +1,4 @@
+#צריך לשנות את familySize לnumOfGroupss
 iteration <- setClass ("iteration",
                        #Data structure that holds data regarding a certain iteration (=manipulation of random numbers)        
                        slots=c(xbars="numeric",
@@ -94,16 +95,16 @@ Preject <- function (method="BH", pvals=c(0), details=FALSE, alpha =0.05){
   return (list ("length"=length(b), "ix"=b))
 }
 
-calcTukeyPVal <-function(xbars,S,groupSize, familySize){
+calcTukeyPVal <-function(xbars,S,groupSize, numOfGroups){
   pval<- 1-ptukey(q=max(dist(xbars))/sqrt(S/groupSize), 
-                  nmeans=familySize ,df=familySize * (groupSize-1))
+                  nmeans=numOfGroups ,df=numOfGroups * (groupSize-1))
   return (pval)
 }
 
-calcPairwisePVals <-function (xbars,S,groupSize, familySize,i=1,details=FALSE){
+calcPairwisePVals <-function (xbars,S,groupSize, numOfGroups,i=1,details=FALSE){
   ##useful for method C phase 2
   pvals=2*(1-pt(q=dist(xbars)/sqrt(2*S[i]/groupSize),
-                df= familySize*(groupSize-1)))
+                df= numOfGroups*(groupSize-1)))
   if (details==TRUE){
     print (c("PAIRWISE", pvals))
     print (as.numeric(pvals))
@@ -135,7 +136,7 @@ setRefVectorBig <-function(size, numOfZeros,mu){
   return (as.logical(dist(DesVector)))
 }
 
-# this method works only for familySize=3, setRefVectorBig does this right for larger sizes
+# this method works only for numOfGroups=3, setRefVectorBig does this right for larger sizes
 # setRefVector <- function (size, numOfTrues){
 #   #initialize reference vector
 #   refvec<-rep (NA,size)
@@ -150,15 +151,16 @@ setRefVectorBig <-function(size, numOfZeros,mu){
 #method C(1): BH with pairwise Pval (2 levels) 1: TukeyPVal, 2:Pairwise PVal
 #method 4: To be added later - currently empty
 
-#this algorithm builds "numOfFamilies" families, each family of size "familySize",
-#with "numOfTrues" trues and the rest of the families are false, with 5 families in which there 
-#are signal (=numOfTrues is used), and the rest of the families are with no signal (all mus are 0)
+#this algorithm builds "numOfFamilies" families, each family of size "numOfGroups",
+#with "numOfTrues" trues and the rest of the families are false, with "numOfSignalFamilies"
+#families in which there 
+#is signal (=numOfTrues is used), and the rest of the families are with no signal (all mus are 0)
 #then uses 3 different methods to reject.
-tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1, numOfSignalFamilies=5,
+tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, numOfSignalFamilies=5,
                       minMu1=0, maxMu1=4, interval=0.5, alpha=0.05, groupSize=16,details=FALSE){
   
   #definition of constant df
-  df=familySize*(groupSize-1) #calculate degs of freedom
+  df=numOfGroups*(groupSize-1) #calculate degs of freedom
   
   #declration of matrices to keep means, size is # of methods * the number of mu values 
   OvrPowerMeans<-matrix(0,4,(maxMu1-minMu1)/interval+1)
@@ -197,10 +199,10 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1, num
       FDRSum <-numeric(2)
       FWERSum <- numeric(2)
       jointFamily <- new ("iteration",
-                          size=choose(familySize,2)*numOfFamilies,
-                          numOfTrues=(numOfFamilies-numOfSignalFamilies)*choose(familySize,2)+
+                          size=choose(numOfGroups,2)*numOfFamilies,
+                          numOfTrues=(numOfFamilies-numOfSignalFamilies)*choose(numOfGroups,2)+
                             #num of true hypotheses in the no signal zone
-                            numOfSignalFamilies*(familySize-1),
+                            numOfSignalFamilies*(numOfGroups-1),
                             #num of true hypotheses in the signal zone
                           falsesMu1=mu
       )
@@ -212,7 +214,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1, num
       for (i in 1:numOfFamilies){
         
         familyArray[[i]]= new ("iteration",
-                               size=choose (familySize,2),
+                               size=choose (numOfGroups,2),
                                numOfTrues=numOfTrues, #=1
                                falsesMu1=mu
         ) #init family
@@ -220,27 +222,27 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1, num
         
         if (i<=numOfSignalFamilies){ #first 5 families with signal
           familyArray[[i]]@refVec=setRefVectorBig(
-            size=familySize,
-            numOfZeros=familySize-numOfTrues,
+            size=numOfGroups,
+            numOfZeros=numOfGroups-numOfTrues,
             mu=mu)
           #           print ("Reference vector:")
           #           print (familyArray[[i]]@refVec)
           #build reference Vector
-          familyArray[[i]]@xbars=getRandomXBars(size=familySize,
-                                                numOfTrues=familySize-1,
+          familyArray[[i]]@xbars=getRandomXBars(size=numOfGroups,
+                                                numOfTrues=numOfGroups-1,
                                                 falsesMu1=mu,
                                                 sd=sqrt(1/groupSize))
         }
         else { #35 families no signal
           familyArray[[i]]@refVec=setRefVectorBig(
-            size=familySize,
-            numOfZeros=familySize,
+            size=numOfGroups,
+            numOfZeros=numOfGroups,
             mu=mu)
           #           print ("Reference vector:")
           #           print (familyArray[[i]]@refVec)
           #build reference Vector (we set numOfTrues as 1 and falsesMu1 as 0 so that all xbars are
           #generated around 0, the value of numOfTrues doesnt matter here)
-          familyArray[[i]]@xbars=getRandomXBars(size=familySize,
+          familyArray[[i]]@xbars=getRandomXBars(size=numOfGroups,
                                                 numOfTrues=1,
                                                 falsesMu1=0,
                                                 sd=sqrt(1/groupSize))
@@ -253,7 +255,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1, num
         familyArray[[i]]@pvals=calcPairwisePVals(familyArray[[i]]@xbars,
                                                  S,
                                                  groupSize,
-                                                 familySize,
+                                                 numOfGroups,
                                                  i=i,
                                                  details=FALSE)
        
@@ -264,7 +266,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1, num
         familyArray[[i]]@proceduresApplied=append(familyArray[[i]]@proceduresApplied,
                                                   new ("procedure"))
         familiesTukeyPVals[i]=calcTukeyPVal(familyArray[[i]]@xbars
-                                            ,S[i],groupSize, familySize)
+                                            ,S[i],groupSize, numOfGroups)
         #calc Tukey PVals for method B(2)
         
         #         print (c("family tukey pval", i, familiesTukeyPVals[i]))
@@ -287,7 +289,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1, num
       SelectedFamilies[[1]]<-SelectFamiliesBH(familiesTukeyPVals)
       SelectedFamilies[[2]]<-SelectedFamilies[[1]] #for this stage selection for both methods is the same
       qStar=qtukey(p=1-alpha*SelectedFamilies[[1]]$length/numOfFamilies,
-                   nmeans=familySize,df=df)
+                   nmeans=numOfGroups,df=df)
       #       print (familyArray[[i]]@pvals, qStar)
       #       print (SelectedFamilies[[1]])
       #       readline()
@@ -368,7 +370,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1, num
                                                      size=jointFamily@size,
                                                      numOfSupposedTrueFamilies=jointFamily@numOfTrues
             ) 
-#             (OverallRejectsLength[methodix]-OverallFR[methodix])/(numOfFamilies*(familySize-numOfTrues))
+#             (OverallRejectsLength[methodix]-OverallFR[methodix])/(numOfFamilies*(numOfGroups-numOfTrues))
           TotalOvrFR[methodix, iters]<-OverallFR[methodix]
           TotalAVGFR[methodix, iters]<-OverallFR[methodix]/SelectedFamilies[[methodix]]$length
           TotalOvrFDR[methodix, iters]<- OverallFR[methodix]/OverallRejectsLength[methodix]
@@ -565,8 +567,10 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, familySize=3, numOfTrues=1, num
   print (AVGFRMeans)
   print ("AVG FWER: ")
   print (AVGFWERMeans)
-  write.csv(TotalAVGFDR, file = "tukeyTest2.csv")
+  write.csv(AVGFRMeans, file = "tukeyTest2.csv")
+  write.csv(AVGFWERMeans, file = "tukeyTest2.csv")
+
 }
 
 #tukeyTest2(n=100)
-tukeyTest2(n=10, familySize=5,minMu1=0, maxMu1=5,details=TRUE)
+tukeyTest2(n=10, numOfGroups=5,minMu1=0, maxMu1=9,details=TRUE)
