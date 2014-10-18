@@ -23,15 +23,15 @@ procedure <- setClass ("procedure",
                        )
 )
 
-calcPower<-function (rejectsLength, falseRejections, size,numOfSupposedTrueFamilies){
+calcPower<-function (rejectsLength, falseRejections, size,numOfFalseH0sInRef){
   #returns num of  true rejections divided by the number of planned rejections
   print ("POWER CALC:")
   print (c("rejects:", rejectsLength))
   print (c("fr:", falseRejections))
   print (c("size:", size))
-  print (c("numOfCorrectRejects:", numOfSupposedTrueFamilies))
-  print (c("Power",(rejectsLength-falseRejections)/(size-numOfSupposedTrueFamilies)))
-  return ((rejectsLength-falseRejections)/(size-numOfSupposedTrueFamilies))
+  print (c("numOfFalseH0sInRef:", numOfFalseH0sInRef))
+  print (c("Power",(rejectsLength-falseRejections)/(size-numOfFalseH0sInRef)))
+  return ((rejectsLength-falseRejections)/(size-numOfFalseH0sInRef))
 }
 
 calcFDR<- function (rejects,falseRejections){
@@ -109,7 +109,7 @@ calcPairwisePVals <-function (xbars,S,groupSize, numOfGroups,i=1,details=FALSE){
     print (c("PAIRWISE", pvals))
     print (as.numeric(pvals))
   }
-  #readline()
+#   readline()
   return (as.numeric(pvals))
 }
 
@@ -200,7 +200,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
       FWERSum <- numeric(2)
       jointFamily <- new ("iteration",
                           size=choose(numOfGroups,2)*numOfFamilies,
-                          numOfTrues=(numOfFamilies-numOfSignalFamilies)*choose(numOfGroups,2)+
+                          numOfTrues=0+
                             #num of true hypotheses in the no signal zone
                             numOfSignalFamilies*(numOfGroups-1),
                             #num of true hypotheses in the signal zone
@@ -238,8 +238,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
             size=numOfGroups,
             numOfZeros=numOfGroups,
             mu=mu)
-          #           print ("Reference vector:")
-          #           print (familyArray[[i]]@refVec)
+
           #build reference Vector (we set numOfTrues as 1 and falsesMu1 as 0 so that all xbars are
           #generated around 0, the value of numOfTrues doesnt matter here)
           familyArray[[i]]@xbars=getRandomXBars(size=numOfGroups,
@@ -247,6 +246,8 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
                                                 falsesMu1=0,
                                                 sd=sqrt(1/groupSize))
         }
+#                             print ("Reference vector:")
+#                             print (familyArray[[i]]@refVec)
         if (details==TRUE){
 #                    print (i)
 #                    print (familyArray[[i]]@xbars)         
@@ -258,7 +259,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
                                                  numOfGroups,
                                                  i=i,
                                                  details=FALSE)
-       
+#        readline()
         #calc Pairwise PVals for Method C(1)
         
         familyArray[[i]]@proceduresApplied=append(familyArray[[i]]@proceduresApplied,
@@ -332,7 +333,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
               calcPower(familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@rejects$length,
                         familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@fr, 
                         familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@size, 
-                        length(which(familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@refVec==TRUE)))
+                        length(which(familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@refVec==FALSE)))
             
             familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@fdr=
               calcFDR(familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@rejects,
@@ -365,10 +366,12 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
           
           TotalAVGFDR[methodix, iters]<-FDRSum[methodix]/SelectedFamilies[[methodix]]$length
           TotalAVGFWER[methodix, iters]<-FWERSum[methodix]/SelectedFamilies[[methodix]]$length
+          print ("TOTAL OVR POWER CALC JOINT FAMILY")
+          print ("")
           TotalOvrPower[methodix, iters]<- calcPower(rejects=OverallRejectsLength[methodix],
                                                      falseRejections=OverallFR[methodix],
                                                      size=jointFamily@size,
-                                                     numOfSupposedTrueFamilies=jointFamily@numOfTrues
+                                                     numOfFalseH0sInRef=jointFamily@size-jointFamily@numOfTrues
             ) 
 #             (OverallRejectsLength[methodix]-OverallFR[methodix])/(numOfFamilies*(numOfGroups-numOfTrues))
           TotalOvrFR[methodix, iters]<-OverallFR[methodix]
@@ -412,7 +415,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
         #calc stats for joint family
         jointFamily@proceduresApplied[[methodix-2]]@fr=countFalseRejections(jointFamily@proceduresApplied[[methodix-2]]@rejects,jointFamily@refVec)
         jointFamily@proceduresApplied[[methodix-2]]@power=calcPower(jointFamily@proceduresApplied[[methodix-2]]@rejects$length,
-                                                                    jointFamily@proceduresApplied[[methodix-2]]@fr, jointFamily@size, jointFamily@numOfTrues)
+                                                                    jointFamily@proceduresApplied[[methodix-2]]@fr, jointFamily@size, jointFamily@size-jointFamily@numOfTrues)
         jointFamily@proceduresApplied[[methodix-2]]@fdr=calcFDR(jointFamily@proceduresApplied[[methodix-2]]@rejects,
                                                                 jointFamily@proceduresApplied[[methodix-2]]@fr)
         jointFamily@proceduresApplied[[methodix-2]]@fwer=calcFWER(jointFamily@proceduresApplied[[methodix-2]]@rejects, 
@@ -573,4 +576,4 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
 }
 
 #tukeyTest2(n=100)
-tukeyTest2(n=10, numOfGroups=5,minMu1=0, maxMu1=9,details=TRUE)
+tukeyTest2(n=100, numOfGroups=5,minMu1=0, maxMu1=9,details=TRUE)
