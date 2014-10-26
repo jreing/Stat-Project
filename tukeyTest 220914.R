@@ -151,7 +151,7 @@ setRefVectorBig <-function(size, numOfZeros,mu){
 # }
 
 
-#method A(3): OVerall BH (one level)
+#method A(3): Overall BH (one level)
 #method B(2): QTukey Statistics (2 levels) 1: TukeyPval , 2: QTukey Stat
 #method C(1): BH with pairwise Pval (2 levels) 1: TukeyPVal, 2:Pairwise PVal
 #method 4: To be added later - currently empty
@@ -588,16 +588,21 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
   )
   
   #change column names in table
-  colnames(OvrPowerMeans)<-seq(minMu1,maxMu1,interval)
+#   colnames(OvrPowerMeans)<-seq(minMu1,maxMu1,interval)
   colnames(OvrFDRMeans)<-seq(minMu1,maxMu1,interval)
   colnames(AVGFDRMeans)<-seq(minMu1,maxMu1,interval)
   colnames(OvrFWERMeans)<-seq(minMu1,maxMu1,interval)
   colnames(OvrFRMeans)<-seq(minMu1,maxMu1,interval)
   colnames(AVGFRMeans)<-seq(minMu1,maxMu1,interval)
   colnames(AVGFWERMeans)<-seq(minMu1,maxMu1,interval)
+  #rownames(OvrPowerMeans)<-c("QTukey Stat", "Pairwise", "Overall BH", "BH BH")
   
   print ("OVERALL POWER:")
-  print(OvrPowerMeans)
+  print (OvrPowerMeans)
+#   sprintf("%1.7f", OvrPowerMeans)
+#   format (OvrPowerMeans,digits=10)
+#  formatC( OvrPowerMeans, format='f',width=8, digits=4 )
+#   
   print ("AVG FDR:")
   print( AVGFDRMeans)
   print ("OVERALL FDR:")
@@ -610,10 +615,25 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
   print (AVGFRMeans)
   print ("AVG FWER: ")
   print (AVGFWERMeans)
-  write.csv(AVGFRMeans, file = "tukeyTest2.csv")
-  write.csv(AVGFWERMeans, file = "tukeyTest2.csv")
   
+  wb<-loadWorkbook(paste("TukeyTest",Sys.Date(),".xls"), create = TRUE)
+  createSheet(wb, name = "OVERALL POWER")
+  writeWorksheet(wb, OvrPowerMeans, sheet = "OVERALL POWER")
+  
+  createSheet(wb, name = "AVG FDR")
+  writeWorksheet(wb, AVGFDRMeans, sheet = "AVG FDR")
+  createSheet(wb, name = "OVERALL FDR")
+  writeWorksheet(wb, OvrFDRMeans, sheet = "OVERALL FDR")
+  createSheet(wb, name = "OVERALL FWER")
+  writeWorksheet(wb, OvrFWERMeans, sheet = "OVERALL FWER")
+  createSheet(wb, name = "OVERALL E(V)")
+  writeWorksheet(wb, OvrFRMeans, sheet = "OVERALL E(V)")
+  createSheet(wb, name = "AVG E(V)")
+  writeWorksheet(wb, AVGFRMeans, sheet = "AVG E(V)")
+  createSheet(wb, name = "AVG FWER")
+  writeWorksheet(wb, AVGFWERMeans, sheet = "AVG FWER")
+  saveWorkbook(wb)
 }
 
 #tukeyTest2(n=100)
-tukeyTest2(n=10, numOfGroups=5,minMu1=0, maxMu1=9,details=FALSE)
+tukeyTest2(n=1, numOfGroups=5,minMu1=0, maxMu1=9,details=FALSE)
