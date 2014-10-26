@@ -175,6 +175,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
   OvrFWERMeans<-matrix(0,4,(maxMu1-minMu1)/interval+1)
   OvrFRMeans<-matrix(0,4,(maxMu1-minMu1)/interval+1)
   AVGFRMeans<-matrix(0,4,(maxMu1-minMu1)/interval+1)
+  PowerOutput<-list()
   
   for (mu in seq(minMu1,maxMu1,interval)){
     
@@ -371,10 +372,10 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
               print (c("Rejects:", familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@rejects$length))
             } #end details print
             FDRSum[methodix]=FDRSum[methodix]+familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@fdr
-            FWERSum[methodix]=FWERSum[methodix]+familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@fwer  				
+            FWERSum[methodix]=FWERSum[methodix]+familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@fwer    			
             OverallFR[methodix]=OverallFR[methodix]+familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@fr
             OverallRejectsLength[methodix]=OverallRejectsLength[methodix]+familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@
-              proceduresApplied[[methodix]]@rejects$length
+            proceduresApplied[[methodix]]@rejects$length
             
             
           } #end for loop of i selected families     
@@ -475,6 +476,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
         AVGFWERMeans[methodix,(mu-minMu1)/interval+1]<-mean(TotalAVGFWER[methodix,])
         AVGFRMeans[methodix,(mu-minMu1)/interval+1]<-mean(TotalAVGFR[methodix,])
       }
+      
       OvrPowerMeans[methodix,(mu-minMu1)/interval+1]<-mean(TotalOvrPower[methodix,])
       OvrFDRMeans[methodix,(mu-minMu1)/interval+1]<-mean(TotalOvrFDR[methodix,])
       OvrFWERMeans[methodix,(mu-minMu1)/interval+1]<-mean(TotalOvrFWER[methodix,])
@@ -484,6 +486,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
       #			print (OvrFDRMeans)
       
     }#end methodix for 
+    PowerOutput[[(mu-minMu1)/interval+1]]=TotalOvrPower
   } #end mu for
   
   
@@ -588,7 +591,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
   )
   
   #change column names in table
-#   colnames(OvrPowerMeans)<-seq(minMu1,maxMu1,interval)
+  colnames(OvrPowerMeans)<-seq(minMu1,maxMu1,interval)
   colnames(OvrFDRMeans)<-seq(minMu1,maxMu1,interval)
   colnames(AVGFDRMeans)<-seq(minMu1,maxMu1,interval)
   colnames(OvrFWERMeans)<-seq(minMu1,maxMu1,interval)
@@ -599,10 +602,10 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
   
   print ("OVERALL POWER:")
   print (OvrPowerMeans)
-#   sprintf("%1.7f", OvrPowerMeans)
-#   format (OvrPowerMeans,digits=10)
-#  formatC( OvrPowerMeans, format='f',width=8, digits=4 )
-#   
+  #   sprintf("%1.7f", OvrPowerMeans)
+  #   format (OvrPowerMeans,digits=10)
+  #  formatC( OvrPowerMeans, format='f',width=8, digits=4 )
+  #   
   print ("AVG FDR:")
   print( AVGFDRMeans)
   print ("OVERALL FDR:")
@@ -633,7 +636,8 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
   createSheet(wb, name = "AVG FWER")
   writeWorksheet(wb, AVGFWERMeans, sheet = "AVG FWER")
   saveWorkbook(wb)
+  print(PowerOutput)
 }
 
 #tukeyTest2(n=100)
-tukeyTest2(n=1, numOfGroups=5,minMu1=0, maxMu1=9,details=FALSE)
+tukeyTest2(n=50, numOfGroups=5,minMu1=0, maxMu1=9,details=FALSE)
