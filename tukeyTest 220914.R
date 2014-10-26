@@ -1,4 +1,3 @@
-#צריך לשנות את familySize לnumOfGroupss
 iteration <- setClass ("iteration",
                        #Data structure that holds data regarding a certain iteration (=manipulation of random numbers)        
                        slots=c(xbars="numeric",
@@ -30,12 +29,12 @@ calcSimesPVals<- function (PVals){
 calcPower<-function (rejectsLength, falseRejections, size,numOfFalseH0sInRef,details=FALSE){
   #returns num of  true rejections divided by the number of planned rejections
   if (details==TRUE){
-      print ("POWER CALC:")
-      print (c("rejects:", rejectsLength))
-      print (c("fr:", falseRejections))
-      print (c("size:", size))
-      print (c("numOfFalseH0sInRef:", numOfFalseH0sInRef))
-      print (c("Power",(rejectsLength-falseRejections)/(size-numOfFalseH0sInRef)))
+    print ("POWER CALC:")
+    print (c("rejects:", rejectsLength))
+    print (c("fr:", falseRejections))
+    print (c("size:", size))
+    print (c("numOfFalseH0sInRef:", numOfFalseH0sInRef))
+    print (c("Power",(rejectsLength-falseRejections)/(size-numOfFalseH0sInRef)))
   }
   return ((rejectsLength-falseRejections)/(size-numOfFalseH0sInRef))
 }
@@ -115,7 +114,7 @@ calcPairwisePVals <-function (xbars,S,groupSize, numOfGroups,i=1,details=FALSE){
     print (c("PAIRWISE", pvals))
     print (as.numeric(pvals))
   }
-#   readline()
+  #   readline()
   return (as.numeric(pvals))
 }
 
@@ -209,11 +208,11 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
                           numOfTrues=0+
                             #num of true hypotheses in the no signal zone
                             numOfSignalFamilies*(numOfGroups-1),
-                            #num of true hypotheses in the signal zone
+                          #num of true hypotheses in the signal zone
                           falsesMu1=mu
       )
-#       print (jointFamily)
-#       readline()
+      #       print (jointFamily)
+      #       readline()
       ##init variance vector
       S=rchisq(n=numOfFamilies,df=df)/df
       
@@ -244,7 +243,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
             size=numOfGroups,
             numOfZeros=numOfGroups,
             mu=mu)
-
+          
           #build reference Vector (we set numOfTrues as 1 and falsesMu1 as 0 so that all xbars are
           #generated around 0, the value of numOfTrues doesnt matter here)
           familyArray[[i]]@xbars=getRandomXBars(size=numOfGroups,
@@ -252,11 +251,11 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
                                                 falsesMu1=0,
                                                 sd=sqrt(1/groupSize))
         }
-#                             print ("Reference vector:")
-#                             print (familyArray[[i]]@refVec)
+        #                             print ("Reference vector:")
+        #                             print (familyArray[[i]]@refVec)
         if (details==TRUE){
-#                    print (i)
-#                    print (familyArray[[i]]@xbars)         
+          #                    print (i)
+          #                    print (familyArray[[i]]@xbars)         
         } #end details print
         
         familyArray[[i]]@pvals=calcPairwisePVals(familyArray[[i]]@xbars,
@@ -265,7 +264,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
                                                  numOfGroups,
                                                  i=i,
                                                  details=FALSE)
-#        readline()
+        #        readline()
         #calc Pairwise PVals for Method C(1)
         
         familyArray[[i]]@proceduresApplied=append(familyArray[[i]]@proceduresApplied,
@@ -277,7 +276,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
         familyArray[[i]]@proceduresApplied=append(familyArray[[i]]@proceduresApplied,
                                                   new ("procedure"))
         familiesTukeyPVals[i]=calcTukeyPVal(familyArray[[i]]@xbars
-                                              ,S[i],groupSize, numOfGroups)
+                                            ,S[i],groupSize, numOfGroups)
         familiesSimesPVals[i]=calcSimesPVals(familyArray[[i]]@pvals)
         
         #calc Tukey PVals for method B(2)
@@ -295,11 +294,11 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
       } #end for i
       
       if (details==TRUE){
-#         print (jointFamily)
-#         print (familiesSimesPVals)
-#         readline()
+        #         print (jointFamily)
+        #         print (familiesSimesPVals)
+        #         readline()
       }
-
+      
       #method B,C step 1: select interesting families using BH
       SelectedFamilies[[1]]<-SelectFamiliesBH(familiesTukeyPVals)
       SelectedFamilies[[2]]<-SelectedFamilies[[1]] #for this stage selection for both methods is the same
@@ -307,9 +306,9 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
                    nmeans=numOfGroups,df=df)
       SelectedFamilies[[4]]<-SelectFamiliesBH(familiesSimesPVals)
       #       print (familyArray[[i]]@pvals, qStar)
-            print ("SELECTS FROM METHOD 4")
-            print (SelectedFamilies[[4]])
-#             readline()
+      print ("SELECTS FROM METHOD 4")
+      print (SelectedFamilies[[4]])
+      #             readline()
       
       
       ##method 1/2 step 2: #process BH/QTukey on selected families
@@ -372,16 +371,16 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
               print (c("Rejects:", familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@rejects$length))
             } #end details print
             FDRSum[methodix]=FDRSum[methodix]+familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@fdr
-            FWERSum[methodix]=FWERSum[methodix]+familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@fwer					
+            FWERSum[methodix]=FWERSum[methodix]+familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@fwer  				
             OverallFR[methodix]=OverallFR[methodix]+familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@fr
             OverallRejectsLength[methodix]=OverallRejectsLength[methodix]+familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@
-                                           proceduresApplied[[methodix]]@rejects$length
+              proceduresApplied[[methodix]]@rejects$length
             
-
+            
           } #end for loop of i selected families     
           #           print (c("OVERALL REJECTS LENGTH method :", methodix ,OverallRejectsLength[methodix]))
           
-    
+          
           TotalAVGFDR[methodix, iters] <-FDRSum[methodix]/SelectedFamilies[[methodix]]$length
           if (is.nan(TotalAVGFDR[methodix, iters])) {
             TotalAVGFDR[methodix, iters]<-0
@@ -396,9 +395,9 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
                                                      falseRejections=OverallFR[methodix],
                                                      size=jointFamily@size,
                                                      numOfFalseH0sInRef=jointFamily@size-jointFamily@numOfTrues
-            ) 
-        
-#             (OverallRejectsLength[methodix]-OverallFR[methodix])/(numOfFamilies*(numOfGroups-numOfTrues))
+          ) 
+          
+          #             (OverallRejectsLength[methodix]-OverallFR[methodix])/(numOfFamilies*(numOfGroups-numOfTrues))
           TotalOvrFR[methodix, iters]<-OverallFR[methodix]
           TotalAVGFR[methodix, iters]<-OverallFR[methodix]/SelectedFamilies[[methodix]]$length
           
@@ -406,7 +405,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
           if (is.nan(TotalOvrFDR[methodix, iters])) {
             TotalOvrFDR[methodix, iters]<-0
           }
-         
+          
           TotalOvrFWER[methodix, iters]<-sign(TotalOvrFDR[methodix, iters])
           if (is.nan(TotalOvrFWER[methodix, iters])) {
             TotalOvrFWER[methodix, iters]<-0
@@ -441,7 +440,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
           #method 3 - overall BH - take joint family and reject in it using BH
           jointFamily@proceduresApplied[[methodix-2]]@rejects=Preject(method="BH", pvals=jointFamily@pvals, alpha=0.05)
         }
-   
+        
         #calc stats for joint family
         jointFamily@proceduresApplied[[methodix-2]]@fr=countFalseRejections(jointFamily@proceduresApplied[[methodix-2]]@rejects,jointFamily@refVec)
         jointFamily@proceduresApplied[[methodix-2]]@power=calcPower(jointFamily@proceduresApplied[[methodix-2]]@rejects$length,
@@ -496,7 +495,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
   #	
   
   plot (seq(minMu1,maxMu1,interval),OvrPowerMeans[1,], 
-        col="blue", ylim=c(0,0.5),xlab= "mu", ylab= "Overall Power",
+        col="blue", ylim=c(0,1),xlab= "mu", ylab= "Overall Power",
         main =c("Overall Power/mu1 in", n, "iterations with methods 1-4"), type="o")
   lines (seq(minMu1,maxMu1,interval),OvrPowerMeans[2,], col="red", type="o")
   lines (seq(minMu1,maxMu1,interval),OvrPowerMeans[3,], col="green", type="o")
@@ -505,7 +504,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
   
   legend("topleft", 
          legend= c("Overall Power method 1", "Overall Power method 2", 
-                   "Overall Power method 3"), 
+                   "Overall Power method 3","Overall Power method 4"), 
          lty=c(1,1,1,1),
          lwd=c(2,2,2,2),
          col=c("blue","red", "green", "pink")
@@ -521,62 +520,73 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
   abline (h=0.05, col="black")
   
   legend("topleft", 
-         legend= c("AVG FDR over the selected method 1", "Overall FDR method 1", "AVG FDR over the selected method 2", "Overall FDR method 2", 
-                   "Overall FDR method 3"), 
+         legend= c("AVG FDR over the selected method 1", "Overall FDR method 1",
+                   "AVG FDR over the selected method 2", "Overall FDR method 2", 
+                   "Overall FDR method 3",
+                   "AVG FDR over the selected method 4", "Overall FDR method 4" ), 
          lty=c(1,1,1,1),
          lwd=c(2,2,2,2),
-         col=c("blue","red", "green", "pink", "brown")
+         col=c("blue","red", "green", "pink", "brown","cyan")
   )
   plot (seq(minMu1,maxMu1,interval),AVGFWERMeans[1,], 
-        col="blue", ylim=c(0,0.5),xlab= "mu", ylab= "FWER",
+        col="blue", ylim=c(0,1),xlab= "mu", ylab= "FWER",
         main =c("FWERs/mu1 in", n, "iterations"), type="o")
   lines (seq(minMu1,maxMu1,interval),OvrFWERMeans[1,], col="red", type="o")
   lines (seq(minMu1,maxMu1,interval),AVGFWERMeans[2,], col="green", type="o")
   lines (seq(minMu1,maxMu1,interval),OvrFWERMeans[2,], col="pink", type="o")
   lines (seq(minMu1,maxMu1,interval),OvrFWERMeans[3,], col="brown", type="o")
+  lines (seq(minMu1,maxMu1,interval),AVGFWERMeans[4,], col="grey", type="o")
   lines (seq(minMu1,maxMu1,interval),OvrFWERMeans[4,], col="cyan", type="o")
   abline (h=0.05, col="black")
   
   legend("topleft", 
-         legend= c("AVG FWER over the selected method 1", "Overall FWER method 1", "AVG FWER over the selected method 2", "Overall FWER method 2", 
-                   "Overall FWER method 3", "Overall FWER method 4"), 
+         legend= c("AVG FWER over the selected method 1", "Overall FWER method 1",
+                   "AVG FWER over the selected method 2", "Overall FWER method 2", 
+                   "Overall FWER method 3", 
+                   "AVG FWER over the selected method 4","Overall FWER method 4"), 
          lty=c(1,1,1,1),
          lwd=c(2,2,2,2),
-         col=c("blue","red", "green", "pink", "brown", "cyan")
+         col=c("blue","red", "green", "pink", "brown","grey", "cyan")
   )
   
   plot (seq(minMu1,maxMu1,interval),AVGFRMeans[1,], 
-        col="blue", ylim=c(0,1),xlab= "mu", ylab= "E[V]",
+        col="blue", ylim=c(0,3),xlab= "mu", ylab= "E[V]",
         main =c("E[V]s/mu1 in", n, "iterations"), type="o")
   lines (seq(minMu1,maxMu1,interval),OvrFRMeans[1,], col="red", type="o")
   lines (seq(minMu1,maxMu1,interval),AVGFRMeans[2,], col="green", type="o")
   lines (seq(minMu1,maxMu1,interval),OvrFRMeans[2,], col="pink", type="o")
   lines (seq(minMu1,maxMu1,interval),OvrFRMeans[3,], col="brown", type="o")
-  lines (seq(minMu1,maxMu1,interval),OvrFRMeans[4,], col="cyan", type="o")
+  lines (seq(minMu1,maxMu1,interval),AVGFRMeans[4,], col="yellow", type="o")
+  lines (seq(minMu1,maxMu1,interval),OvrFRMeans[4,], col="grey", type="o")
   abline (h=0.05, col="black")
   
   legend("topleft", 
-         legend= c("AVG E[V] over the selected method 1", "Overall E[V] method 1", "AVG E[V] over the selected method 2", "Overall E[V] method 2", 
-                   "Overall E[V] method 3"), 
+         legend= c("AVG E[V] over the selected method 1", "Overall E[V] method 1", 
+                   "AVG E[V] over the selected method 2", "Overall E[V] method 2", 
+                   "Overall E[V] method 3",
+                   "AVG E[V] over the selected method 4", "Overall E[V] method 4"), 
          lty=c(1,1,1,1),
          lwd=c(2,2,2,2),
-         col=c("blue","red", "green", "pink", "brown")
+         col=c("blue","red", "green", "pink", "brown","yellow","grey")
   )
-  plot (seq(minMu1,maxMu1,interval),AVGFWERMeans[1,] , col="blue", ylim=c(0,0.1),
+  plot (seq(minMu1,maxMu1,interval),AVGFWERMeans[1,] , col="blue", ylim=c(0,0.5),
         ylab="FWER/E[V]", xlab="mu",
         main =c("Avg FWER and Avg E[V]/mu1 in", n, "iterations with methods 1,2,4"), type="o")
   #    readline()
   lines (seq(minMu1,maxMu1,interval),AVGFRMeans[1,], col="red", type="o")
   lines (seq(minMu1,maxMu1,interval),AVGFWERMeans[2,], col="green", type="o")
   lines (seq(minMu1,maxMu1,interval),AVGFRMeans[2,], col="pink", type="o")
-  
+  lines (seq(minMu1,maxMu1,interval),AVGFWERMeans[4,], col="yellow", type="o")
+  lines (seq(minMu1,maxMu1,interval),AVGFRMeans[4,], col="grey", type="o")
   legend("topleft", 
          legend= c("Average FWER method 1","E[V] over the selected method 1",
-                   "Average FWER method 2","E[V] over the selected method 2"), 
+                   "Average FWER method 2","E[V] over the selected method 2",
+                   "Average FWER method 4","E[V] over the selected method 4"), 
          lty=c(1,1,1,1),
          lwd=c(2,2,2,2),
-         col=c("blue","red", "green", "pink")
+         col=c("blue","red", "green", "pink","yellow","grey")
   )
+  
   #change column names in table
   colnames(OvrPowerMeans)<-seq(minMu1,maxMu1,interval)
   colnames(OvrFDRMeans)<-seq(minMu1,maxMu1,interval)
@@ -602,8 +612,8 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
   print (AVGFWERMeans)
   write.csv(AVGFRMeans, file = "tukeyTest2.csv")
   write.csv(AVGFWERMeans, file = "tukeyTest2.csv")
-
+  
 }
 
 #tukeyTest2(n=100)
-tukeyTest2(n=100, numOfGroups=5,minMu1=0, maxMu1=9,details=FALSE)
+tukeyTest2(n=10, numOfGroups=5,minMu1=0, maxMu1=9,details=FALSE)
