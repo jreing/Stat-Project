@@ -82,7 +82,7 @@ SelectFamiliesBH<-function (familiesSimesPVals){
 
 
 OverallBHSelectedFamilies<-function (jointRejects){
-  newIXs<-unique(as.integer(jointRejects$ix/10))+1
+  newIXs<-unique(as.integer((jointRejects$ix-1)/10))+1
   return (list ("length"=length(newIXs), "ix"=newIXs))
   
 }
@@ -361,17 +361,19 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
 #                  
 #               }
               familyNum<-SelectedFamilies[[methodix]]$ix[i]
-              print (SelectedFamilies[[methodix]]$ix)
-              print (c("familynum", familyNum))
+#               print (SelectedFamilies[[methodix]]$ix)
+#               print (c("familynum", familyNum))
               m3rejects<-jointFamily@proceduresApplied[[1]]@rejects$ix
-              m3rejects<-m3rejects[m3rejects> (familyNum-1)*10 &&
-                               m3rejects<= (familyNum)*10] %% 10 + 1 
-              print ("after modulus")
-              print (m3rejects)
-#               m3rejects<-m3rejects-(familyNum-1)*10
-              print ("Method 3 rejects")
-              print(m3rejects)
-                               
+#               print (m3rejects)
+              #             
+              m3rejects<-m3rejects[m3rejects> (familyNum-1)*10 &
+                               m3rejects<= (familyNum)*10] -(familyNum-1)*10
+#               print ("after modulus")
+#               print (m3rejects)
+# #               m3rejects<-m3rejects-(familyNum-1)*10
+#               print ("Method 3 rejects")
+#               print(m3rejects)
+#                                
               familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@rejects<-
                    list("length"=length(m3rejects), "ix"=m3rejects)
                                         
@@ -662,8 +664,8 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
   createSheet(wb, name = "AVG FWER")
   writeWorksheet(wb, AVGFWERMeans, sheet = "AVG FWER")
   saveWorkbook(wb)
-  print(PowerOutput)
+#   print(PowerOutput)
 }
 
 #tukeyTest2(n=100)
-tukeyTest2(n=50, numOfGroups=5,minMu1=0, maxMu1=9,details=FALSE)
+tukeyTest2(n=100, numOfGroups=5,minMu1=0, maxMu1=9,details=FALSE)
