@@ -711,6 +711,18 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
   colnames(FAMILYFWERMeans)<-seq(minMu1,maxMu1,interval)
   colnames(FAMILYFDRMeans)<-seq(minMu1,maxMu1,interval)
   colnames(FAMILYpowerMeans)<-seq(minMu1,maxMu1,interval)
+  
+  colnames(OvrPowerSD)<-seq(minMu1,maxMu1,interval)
+  colnames(AVGPowerSD)<-seq(minMu1,maxMu1,interval)
+  colnames(OvrFDRSD)<-seq(minMu1,maxMu1,interval)
+  colnames(AVGFDRSD)<-seq(minMu1,maxMu1,interval)
+  colnames(OvrFWERSD)<-seq(minMu1,maxMu1,interval)
+  colnames(OvrFRSD)<-seq(minMu1,maxMu1,interval)
+  colnames(AVGFRSD)<-seq(minMu1,maxMu1,interval)
+  colnames(AVGFWERSD)<-seq(minMu1,maxMu1,interval)
+  colnames(FAMILYFWERSD)<-seq(minMu1,maxMu1,interval)
+  colnames(FAMILYFDRSD)<-seq(minMu1,maxMu1,interval)
+  colnames(FAMILYpowerSD)<-seq(minMu1,maxMu1,interval)
   #   rownames(OvrPowerMeans)<-c("QTukey Stat", "Pairwise", "Overall BH", "BH BH")
     
   print ("OVERALL POWER:")
