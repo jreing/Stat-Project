@@ -148,10 +148,14 @@ setDesVector <-function (size, numOfZeros,mu=4){
   return (c(a,b))
 }
 
-setRefVectorBig <-function(size, numOfZeros,mu){
+setRefVectorBig <-function(size, numOfZeros,mu, details=FALSE){
   DesVector<-setDesVector(size,numOfZeros,mu)
-  #   print ("DesVector:")
-  #   print (DesVector)
+  if (details==TRUE){
+     print ("DesVector:")
+     print (DesVector)
+     print ("RefVector:")
+     print (as.logical(dist(DesVector)))
+  }
   return (as.logical(dist(DesVector)))
 }
 
@@ -274,7 +278,8 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
           familyArray[[i]]@refVec=setRefVectorBig(
             size=numOfGroups,
             numOfZeros=numOfGroups-numOfTrues,
-            mu=mu)
+            mu=mu,
+            details=FALSE)
           #           print ("Reference vector:")
           #           print (familyArray[[i]]@refVec)
           #build reference Vector
@@ -445,7 +450,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
                                                                         jointFamily@proceduresApplied[[methodix-2]]@fr)
               
               TotalOvrFDR[methodix,iters]=jointFamily@proceduresApplied[[methodix-2]]@fdr
-              TotalOvrFWER[methodix,iters]=jointFamily@proceduresApplied[[methodix-2]]@fwer      		
+              TotalOvrFWER[methodix,iters]=jointFamily@proceduresApplied[[methodix-2]]@fwer        	
               TotalOvrFR[methodix,iters]=jointFamily@proceduresApplied[[methodix-2]]@fr
               TotalOvrPower[methodix,iters]=jointFamily@proceduresApplied[[methodix-2]]@power						
             }
@@ -724,7 +729,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
   colnames(FAMILYFDRSD)<-seq(minMu1,maxMu1,interval)
   colnames(FAMILYpowerSD)<-seq(minMu1,maxMu1,interval)
   #   rownames(OvrPowerMeans)<-c("QTukey Stat", "Pairwise", "Overall BH", "BH BH")
-    
+  
   print ("OVERALL POWER:")
   print (OvrPowerMeans)
   print ("AVG POWER:")
@@ -829,4 +834,4 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
 }
 
 #tukeyTest2(n=100)
-tukeyTest2(n=10, numOfGroups=5,interval=0.5, minMu1=0, maxMu1=6,details=FALSE)
+tukeyTest2(n=50, numOfGroups=5,numOfTrues=3, interval=0.5, minMu1=0, maxMu1=6,details=FALSE)
