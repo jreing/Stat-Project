@@ -182,9 +182,9 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
   df=numOfGroups*(groupSize-1) #calculate degs of freedom
   
   #define constant methodnames
-  METHOD_NAMES=rbind("QTukey Stat", "Pairwise", "Overall BH", "BH BH")
+  METHOD_NAMES=rbind("QTukey Stat", "Pairwise", "Overall BH", "BH BH(Simes)")
   
-  #declration of matrices to keep means, size is # of methods * the number of mu values 
+  #decleration of matrices to keep means, size is # of methods * the number of mu values 
   OvrPowerMeans<-matrix(0,4,(maxMu1-minMu1)/interval+1)
   AVGPowerMeans<-matrix(0,4,(maxMu1-minMu1)/interval+1)
   AVGFDRMeans<-matrix(0,4,(maxMu1-minMu1)/interval+1)
@@ -193,7 +193,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
   OvrFWERMeans<-matrix(0,4,(maxMu1-minMu1)/interval+1)
   OvrFRMeans<-matrix(0,4,(maxMu1-minMu1)/interval+1)
   AVGFRMeans<-matrix(0,4,(maxMu1-minMu1)/interval+1)
-
+  
   FAMILYpowerMeans<-matrix(0,4,(maxMu1-minMu1)/interval+1)
   FAMILYFDRMeans<-matrix(0,4,(maxMu1-minMu1)/interval+1)
   FAMILYFWERMeans<-matrix(0,4,(maxMu1-minMu1)/interval+1)
@@ -246,7 +246,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
       OverallFR <- numeric(4)
       FDRSum <-numeric(4)
       FWERSum <- numeric(4)
-      
+      POWERSum <- numeric(4)
       
       jointFamily <- new ("iteration",
                           size=choose(numOfGroups,2)*numOfFamilies,
@@ -364,19 +364,19 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
         FAMILYFR[methodix,iters]<-countFalseFamilyRejections(SelectedFamilies[[methodix]],numOfSignalFamilies)
         
         FAMILYpower[methodix,iters]<-calcPower(rejects=SelectedFamilies[[methodix]]$length,
-                                               falseRejections=FAMILYFR[methodix],
+                                               falseRejections=FAMILYFR[methodix,iters],
                                                size=numOfFamilies,
                                                numOfFalseH0sInRef=numOfFamilies-numOfSignalFamilies,
                                                details=FALSE
         ) 
-        FAMILYFDR[methodix,iters]<-calcFDR(rejects=SelectedFamilies[[methodix]],falseRejections=FAMILYFR[methodix])
-        FAMILYFWER[methodix,iters]<-calcFWER(rejects=SelectedFamilies[[methodix]],falseRejections=FAMILYFR[methodix])
+        FAMILYFDR[methodix,iters]<-calcFDR(rejects=SelectedFamilies[[methodix]],falseRejections=FAMILYFR[methodix,iters])
+        FAMILYFWER[methodix,iters]<-calcFWER(rejects=SelectedFamilies[[methodix]],falseRejections=FAMILYFR[methodix,iters])
         
         if (details==TRUE){
-          print (c("FAMILY POWER",methodix, FAMILYpower[methodix]))
-          print (c("FAMILY FR",methodix, FAMILYFR[methodix]))
-          print (c("FAMILY FDR",methodix, FAMILYFDR[methodix]))
-          print (c("FAMILY FWER",methodix, FAMILYFWER[methodix]))
+          print (c("FAMILY POWER",methodix, FAMILYpower[methodix,iters]))
+          print (c("FAMILY FR",methodix, FAMILYFR[methodix,iters]))
+          print (c("FAMILY FDR",methodix, FAMILYFDR[methodix,iters]))
+          print (c("FAMILY FWER",methodix, FAMILYFWER[methodix,iters]))
         }
       }
       
@@ -445,7 +445,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
                                                                         jointFamily@proceduresApplied[[methodix-2]]@fr)
               
               TotalOvrFDR[methodix,iters]=jointFamily@proceduresApplied[[methodix-2]]@fdr
-              TotalOvrFWER[methodix,iters]=jointFamily@proceduresApplied[[methodix-2]]@fwer    			
+              TotalOvrFWER[methodix,iters]=jointFamily@proceduresApplied[[methodix-2]]@fwer      		
               TotalOvrFR[methodix,iters]=jointFamily@proceduresApplied[[methodix-2]]@fr
               TotalOvrPower[methodix,iters]=jointFamily@proceduresApplied[[methodix-2]]@power						
             }
@@ -498,6 +498,9 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
             TotalAVGFWER[methodix, iters]<-0
           }
           TotalAVGPower[methodix,iters]<-POWERSum[methodix]/SelectedFamilies[[methodix]]$length
+          if (is.nan(TotalAVGPower[methodix, iters])) {
+            TotalAVGPower[methodix, iters]<-0
+          }
           #           print ("TOTAL OVR POWER CALC")
           #           print ("")
           TotalOvrPower[methodix, iters]<- calcPower(rejects=OverallRejectsLength[methodix],
@@ -563,6 +566,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
       AVGFDRMeans[methodix,(mu-minMu1)/interval+1]<-mean(TotalAVGFDR[methodix,])
       AVGFWERMeans[methodix,(mu-minMu1)/interval+1]<-mean(TotalAVGFWER[methodix,])
       AVGFRMeans[methodix,(mu-minMu1)/interval+1]<-mean(TotalAVGFR[methodix,])
+      AVGPowerMeans[methodix,(mu-minMu1)/interval+1]<-mean(TotalAVGPower[methodix,])
       
       OvrPowerMeans[methodix,(mu-minMu1)/interval+1]<-mean(TotalOvrPower[methodix,])
       OvrFDRMeans[methodix,(mu-minMu1)/interval+1]<-mean(TotalOvrFDR[methodix,])
@@ -573,8 +577,8 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
       FAMILYFWERMeans[methodix,(mu-minMu1)/interval+1]<-mean(FAMILYFWER[methodix,])
       FAMILYpowerMeans[methodix,(mu-minMu1)/interval+1]<-mean(FAMILYpower[methodix,])
       #calc final SDs
-      AVGFDRSD[methodix,(mu-minMu1)/interval+1]<-sd(TotalAVGFDR[methodix,OvrPowerSD[methodix,(mu-minMu1)/interval+1]<-sd(TotalOvrPower[methodix,])
-                                                                ])
+      AVGFDRSD[methodix,(mu-minMu1)/interval+1]<-sd(TotalAVGFDR[methodix,])
+      OvrPowerSD[methodix,(mu-minMu1)/interval+1] <-sd(TotalOvrPower[methodix,])   
       AVGFWERSD[methodix,(mu-minMu1)/interval+1]<-sd(TotalAVGFWER[methodix,])
       AVGFRSD[methodix,(mu-minMu1)/interval+1]<-sd(TotalAVGFR[methodix,])
       
@@ -697,6 +701,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
   
   #change column names in table
   colnames(OvrPowerMeans)<-seq(minMu1,maxMu1,interval)
+  colnames(AVGPowerMeans)<-seq(minMu1,maxMu1,interval)
   colnames(OvrFDRMeans)<-seq(minMu1,maxMu1,interval)
   colnames(AVGFDRMeans)<-seq(minMu1,maxMu1,interval)
   colnames(OvrFWERMeans)<-seq(minMu1,maxMu1,interval)
@@ -707,15 +712,11 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
   colnames(FAMILYFDRMeans)<-seq(minMu1,maxMu1,interval)
   colnames(FAMILYpowerMeans)<-seq(minMu1,maxMu1,interval)
   #   rownames(OvrPowerMeans)<-c("QTukey Stat", "Pairwise", "Overall BH", "BH BH")
-  
-  
-  
+    
   print ("OVERALL POWER:")
   print (OvrPowerMeans)
-  #   sprintf("%1.7f", OvrPowerMeans)
-  #   format (OvrPowerMeans,digits=10)
-  #  formatC( OvrPowerMeans, format='f',width=8, digits=4 )
-  #   
+  print ("AVG POWER:")
+  print (AVGPowerMeans)
   print ("AVG FDR:")
   print( AVGFDRMeans)
   print ("OVERALL FDR:")
@@ -734,6 +735,29 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
   print (FAMILYFDRMeans)
   print ("FAMILY FWER:")
   print (FAMILYFWERMeans)
+  
+  print ("OVERALL POWER SD:")
+  print (OvrPowerSD)
+  print ("AVG POWER SD:")
+  print (AVGPowerSD)
+  print ("AVG FDR SD:")
+  print( AVGFDRSD)
+  print ("OVERALL FDR SD:")
+  print( OvrFDRSD)
+  print ("OVERALL FWER SD:")
+  print(OvrFWERSD)
+  print ("OVERALL E[V] SD:")
+  print(OvrFRSD)
+  print ("AVG E[V] SD: ")
+  print (AVGFRSD)
+  print ("AVG FWER SD: ")
+  print (AVGFWERSD)
+  print ("FAMILY POWER SD:")
+  print (FAMILYpowerSD)
+  print ("FAMILY FDR SD:")
+  print (FAMILYFDRSD)
+  print ("FAMILY FWER SD:")
+  print (FAMILYFWERSD)
   
   #export to EXCEL MEANS
   wb<-loadWorkbook(paste("TukeyTest MEANS",Sys.Date(),"numOfGroups=",numOfGroups,"n=",n,".xls"), create = TRUE)
@@ -761,7 +785,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
   writeWorksheet(wb, cbind(METHOD_NAMES,OvrFWERMeans), sheet = "FAMILY FWER")
   
   saveWorkbook(wb)
-
+  
   #export to EXCEL SDs
   wb<-loadWorkbook(paste("TukeyTest sd",Sys.Date(),"numOfGroups=",numOfGroups,"n=",n,".xls"), create = TRUE)
   
@@ -779,7 +803,6 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
   writeWorksheet(wb, cbind(METHOD_NAMES,AVGFRSD), sheet = "AVG E(V)")
   createSheet(wb, name = "AVG FWER")
   writeWorksheet(wb, cbind(METHOD_NAMES,AVGFWERSD), sheet = "AVG FWER")
-  
   createSheet(wb, name = "FAMILY POWER")
   writeWorksheet(wb, cbind(METHOD_NAMES,OvrPowerSD),  sheet = "FAMILY POWER")
   createSheet(wb, name = "FAMILY FDR")
@@ -794,4 +817,4 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
 }
 
 #tukeyTest2(n=100)
-tukeyTest2(n=1, numOfGroups=5,interval=0.5, minMu1=0, maxMu1=6,details=FALSE)
+tukeyTest2(n=10, numOfGroups=5,interval=0.5, minMu1=0, maxMu1=6,details=FALSE)
