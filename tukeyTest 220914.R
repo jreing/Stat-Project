@@ -173,6 +173,9 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
   #definition of constant df
   df=numOfGroups*(groupSize-1) #calculate degs of freedom
   
+  #define constant methodnames
+  METHOD_NAMES=rbind("QTukey Stat", "Pairwise", "Overall BH", "BH BH")
+  
   #declration of matrices to keep means, size is # of methods * the number of mu values 
   OvrPowerMeans<-matrix(0,4,(maxMu1-minMu1)/interval+1)
   AVGFDRMeans<-matrix(0,4,(maxMu1-minMu1)/interval+1)
@@ -626,7 +629,9 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
   colnames(OvrFRMeans)<-seq(minMu1,maxMu1,interval)
   colnames(AVGFRMeans)<-seq(minMu1,maxMu1,interval)
   colnames(AVGFWERMeans)<-seq(minMu1,maxMu1,interval)
-  #rownames(OvrPowerMeans)<-c("QTukey Stat", "Pairwise", "Overall BH", "BH BH")
+  rownames(OvrPowerMeans)<-c("QTukey Stat", "Pairwise", "Overall BH", "BH BH")
+  
+  
   
   print ("OVERALL POWER:")
   print (OvrPowerMeans)
@@ -647,25 +652,26 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
   print ("AVG FWER: ")
   print (AVGFWERMeans)
   
-  wb<-loadWorkbook(paste("TukeyTest",Sys.Date(),".xls"), create = TRUE)
+  wb<-loadWorkbook(paste("TukeyTest",Sys.Date(),"numOfGroups=",numOfGroups,"n=",n,".xls"), create = TRUE)
   createSheet(wb, name = "OVERALL POWER")
-  writeWorksheet(wb, OvrPowerMeans, sheet = "OVERALL POWER")
+  
+  writeWorksheet(wb, cbind(METHOD_NAMES,OvrPowerMeans),  sheet = "OVERALL POWER", header=TRUE)
   
   createSheet(wb, name = "AVG FDR")
-  writeWorksheet(wb, AVGFDRMeans, sheet = "AVG FDR")
+  writeWorksheet(wb, cbind(METHOD_NAMES,AVGFDRMeans), sheet = "AVG FDR")
   createSheet(wb, name = "OVERALL FDR")
-  writeWorksheet(wb, OvrFDRMeans, sheet = "OVERALL FDR")
+  writeWorksheet(wb, cbind(METHOD_NAMES,OvrFDRMeans), sheet = "OVERALL FDR")
   createSheet(wb, name = "OVERALL FWER")
-  writeWorksheet(wb, OvrFWERMeans, sheet = "OVERALL FWER")
+  writeWorksheet(wb, cbind(METHOD_NAMES,OvrFWERMeans), sheet = "OVERALL FWER")
   createSheet(wb, name = "OVERALL E(V)")
-  writeWorksheet(wb, OvrFRMeans, sheet = "OVERALL E(V)")
+  writeWorksheet(wb, cbind(METHOD_NAMES,OvrFRMeans), sheet = "OVERALL E(V)")
   createSheet(wb, name = "AVG E(V)")
-  writeWorksheet(wb, AVGFRMeans, sheet = "AVG E(V)")
+  writeWorksheet(wb, cbind(METHOD_NAMES,AVGFRMeans), sheet = "AVG E(V)")
   createSheet(wb, name = "AVG FWER")
-  writeWorksheet(wb, AVGFWERMeans, sheet = "AVG FWER")
+  writeWorksheet(wb, cbind(METHOD_NAMES,AVGFWERMeans), sheet = "AVG FWER")
   saveWorkbook(wb)
 #   print(PowerOutput)
 }
 
 #tukeyTest2(n=100)
-tukeyTest2(n=100, numOfGroups=5,minMu1=0, maxMu1=9,details=FALSE)
+tukeyTest2(n=1, numOfGroups=5,interval=0.05, minMu1=0, maxMu1=1,details=FALSE)
