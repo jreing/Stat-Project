@@ -8,6 +8,7 @@ iteration <- setClass ("iteration",
                                falsesMu1="numeric",
                                size="numeric",
                                proceduresApplied= "list"
+                             
                        )
 )
 procedure <- setClass ("procedure",
@@ -52,6 +53,13 @@ calcFWER<- function (rejects, falseRejections){
     return (1)
   if (falseRejections==0) 
     return (0)
+}
+
+countFalseFamilyRejections <- function (rejects, numOfSignalFamilies){
+  if (rejects$length==0){ #if there were no rejects at all
+    return (0)
+  }
+  return (length(which(rejects$ix>numOfSignalFamilies)))
 }
 
 countFalseRejections<-function (rejects , refVec){
@@ -213,6 +221,12 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
       OverallFR <- numeric(4)
       FDRSum <-numeric(4)
       FWERSum <- numeric(4)
+      
+      FAMILYpower<-numeric(4)
+      FAMILYFDR<-numeric(4)
+      FAMILYFWER<-numeric(4)
+      FAMILYFR<-numeric(4)
+      
       jointFamily <- new ("iteration",
                           size=choose(numOfGroups,2)*numOfFamilies,
                           numOfTrues=0+
@@ -324,13 +338,32 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
 #       print (SelectedFamilies[[4]])
       #             readline()
       
+      #calc Family Stats:
+      for (methodix in 1:4){
+        FAMILYFR[methodix,iters]<-countFalseFamilyRejections(SelectedFamilies[[methodix]],numOfSignalFamilies)
+       
+        FAMILYpower[methodix,iters]<-calcPower(rejects=SelectedFamilies[[methodix]]$length,
+                                                falseRejections=FAMILYFR[methodix],
+                                                size=numOfFamilies,
+                                                numOfFalseH0sInRef=numOfFamilies-numOfSignalFamilies,
+                                                 details=FALSE
+                                                ) 
+        FAMILYFDR[methodix,iters]<-calcFDR(rejects=SelectedFamilies[[methodix]],falseRejections=FAMILYFR[methodix])
+        FAMILYFWER[methodix,iters]<-calcFWER(rejects=SelectedFamilies[[methodix]],falseRejections=FAMILYFR[methodix])
+      
+        if (details==TRUE){
+              print (c("FAMILY POWER",methodix, FAMILYpower[methodix]))
+              print (c("FAMILY FR",methodix, FAMILYFR[methodix]))
+              print (c("FAMILY FDR",methodix, FAMILYFDR[methodix]))
+              print (c("FAMILY FWER",methodix, FAMILYFWER[methodix]))
+         }
+      }
+
       
       ##method 1/2/4 step 2: #process BH/QTukey on selected families
       for (methodix in 1:4){ #run through methods
-#         if (methodix==3){
-#           methodix<-4
-#         }
-        print (c("METHOD:", methodix))
+
+#         print (c("METHOD:", methodix))
         if (SelectedFamilies[[methodix]]$length>0){   #if there are any selected families
           for (i in 1:SelectedFamilies[[methodix]]$length){ #run thru selected families
             
@@ -629,7 +662,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
   colnames(OvrFRMeans)<-seq(minMu1,maxMu1,interval)
   colnames(AVGFRMeans)<-seq(minMu1,maxMu1,interval)
   colnames(AVGFWERMeans)<-seq(minMu1,maxMu1,interval)
-  rownames(OvrPowerMeans)<-c("QTukey Stat", "Pairwise", "Overall BH", "BH BH")
+#   rownames(OvrPowerMeans)<-c("QTukey Stat", "Pairwise", "Overall BH", "BH BH")
   
   
   
@@ -674,4 +707,4 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
 }
 
 #tukeyTest2(n=100)
-tukeyTest2(n=1, numOfGroups=5,interval=0.05, minMu1=0, maxMu1=1,details=FALSE)
+tukeyTest2(n=1, numOfGroups=5,interval=0.5, minMu1=0, maxMu1=6,details=FALSE)
