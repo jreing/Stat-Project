@@ -269,14 +269,21 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
       FWERSum <- numeric(4)
       POWERSum <- numeric(4)
       
+      if (!is.nan(DesVector[1])){
+        numOfGroups=length(DesVector)
+        tempDes=as.logical(dist(DesVector))
+        numOfTrues=length(tempDes[tempDes==TRUE])
+#         print (numOfGroups)
+#         print (numOfTrues)
+      }
       jointFamily <- new ("iteration",
                           size=choose(numOfGroups,2)*numOfFamilies,
                           numOfTrues=0+
                             #num of true hypotheses in the no signal zone
-                            numOfSignalFamilies*(numOfGroups-1)
+                            numOfSignalFamilies*(numOfTrues)
                           #num of true hypotheses in the signal zone
                      
-      )
+                     )
       #       print (jointFamily)
       #       readline()
       ##init variance vector
@@ -414,7 +421,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
       ##method 1/2/4 step 2: #process BH/QTukey on selected families
       for (methodix in 1:4){ #run through methods
         
-        #         print (c("METHOD:", methodix))
+                print (c("METHOD:", methodix))
         if (SelectedFamilies[[methodix]]$length>0){   #if there are any selected families
           for (i in 1:SelectedFamilies[[methodix]]$length){ #run thru selected families
             
@@ -442,11 +449,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
             }
             
             if (methodix==3){
-              #               for (reject in 1:jointFamily@proceduresApplied[[methodix-2]]@rejects$length){
-              #                  rejFamily<-jointFamily@proceduresApplied[[methodix-2]]@rejects$ix[reject]/10
-              #                  SelectedFamilies[[3]]<-append(SelectedFamilies[[3]])
-              #                  
-              #               }
+
               familyNum<-SelectedFamilies[[methodix]]$ix[i]
               #               print (SelectedFamilies[[methodix]]$ix)
               #               print (c("familynum", familyNum))
@@ -468,7 +471,9 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
               #calc stats for joint family
               jointFamily@proceduresApplied[[methodix-2]]@fr=countFalseRejections(jointFamily@proceduresApplied[[methodix-2]]@rejects,jointFamily@refVec)
               jointFamily@proceduresApplied[[methodix-2]]@power=calcPower(jointFamily@proceduresApplied[[methodix-2]]@rejects$length,
-                                                                          jointFamily@proceduresApplied[[methodix-2]]@fr, jointFamily@size, jointFamily@size-jointFamily@numOfTrues)
+                                                                          jointFamily@proceduresApplied[[methodix-2]]@fr,
+                                                                          jointFamily@size, 
+                                                                          jointFamily@size-jointFamily@numOfTrues)
               jointFamily@proceduresApplied[[methodix-2]]@fdr=calcFDR(jointFamily@proceduresApplied[[methodix-2]]@rejects,
                                                                       jointFamily@proceduresApplied[[methodix-2]]@fr)
               jointFamily@proceduresApplied[[methodix-2]]@fwer=calcFWER(jointFamily@proceduresApplied[[methodix-2]]@rejects, 
@@ -514,6 +519,9 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
             OverallRejectsLength[methodix]=OverallRejectsLength[methodix]+familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@
               proceduresApplied[[methodix]]@rejects$length
             
+            print ("OVR REJECTS LENGTH")
+            print (c("methodix", methodix))
+            print (OverallRejectsLength[methodix])
             
           } #end for loop of i selected families     
           #           print (c("OVERALL REJECTS LENGTH method :", methodix ,OverallRejectsLength[methodix]))
@@ -863,4 +871,4 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
 
 #tukeyTest2(n=100)
 # tukeyTest2(n=50, numOfGroups=5,numOfTrues=1, interval=0.5, minMu1=0, maxMu1=4,details=FALSE)
-tukeyTest2(n=1000, numOfGroups=5,numOfTrues=1, interval=0.5, minMu1=0, maxMu1=4,DesVector=c(0,0,2,2,4), details=FALSE)
+tukeyTest2(n=10, numOfGroups=5,numOfTrues=1, interval=0.5, minMu1=0, maxMu1=2,DesVector=c(0,2,2,4,4), details=FALSE)
