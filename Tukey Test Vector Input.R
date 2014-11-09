@@ -196,7 +196,7 @@ setRefVectorBig <-function(size, numOfZeros,mu, DesVector=NaN, details=FALSE){
 #is signal (=numOfTrues is used), and the rest of the families are with no signal (all mus are 0)
 #then uses 3 different methods to reject.
 tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, numOfSignalFamilies=5,
-                      minMu1=0, maxMu1=4, interval=0.5, alpha=0.05, groupSize=16,details=FALSE,DesVector=NaN){
+                      mindelta=0, maxdelta=4, interval=0.5, alpha=0.05, groupSize=16,details=FALSE,DesVector=NaN){
   
   
   #definition of constant df
@@ -206,37 +206,37 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
   METHOD_NAMES=rbind("QTukey Stat", "Pairwise", "Overall BH", "BH BH(Simes)")
   
   #decleration of matrices to keep means, size is # of methods * the number of mu values 
-  OvrPowerMeans<-matrix(0,4,(maxMu1-minMu1)/interval+1)
-  AVGPowerMeans<-matrix(0,4,(maxMu1-minMu1)/interval+1)
-  AVGFDRMeans<-matrix(0,4,(maxMu1-minMu1)/interval+1)
-  OvrFDRMeans<-matrix(0,4,(maxMu1-minMu1)/interval+1)
-  AVGFWERMeans<-matrix(0,4,(maxMu1-minMu1)/interval+1)
-  OvrFWERMeans<-matrix(0,4,(maxMu1-minMu1)/interval+1)
-  OvrFRMeans<-matrix(0,4,(maxMu1-minMu1)/interval+1)
-  AVGFRMeans<-matrix(0,4,(maxMu1-minMu1)/interval+1)
+  OvrPowerMeans<-matrix(0,4,(maxdelta-mindelta)/interval+1)
+  AVGPowerMeans<-matrix(0,4,(maxdelta-mindelta)/interval+1)
+  AVGFDRMeans<-matrix(0,4,(maxdelta-mindelta)/interval+1)
+  OvrFDRMeans<-matrix(0,4,(maxdelta-mindelta)/interval+1)
+  AVGFWERMeans<-matrix(0,4,(maxdelta-mindelta)/interval+1)
+  OvrFWERMeans<-matrix(0,4,(maxdelta-mindelta)/interval+1)
+  OvrFRMeans<-matrix(0,4,(maxdelta-mindelta)/interval+1)
+  AVGFRMeans<-matrix(0,4,(maxdelta-mindelta)/interval+1)
   
-  FAMILYpowerMeans<-matrix(0,4,(maxMu1-minMu1)/interval+1)
-  FAMILYFDRMeans<-matrix(0,4,(maxMu1-minMu1)/interval+1)
-  FAMILYFWERMeans<-matrix(0,4,(maxMu1-minMu1)/interval+1)
+  FAMILYpowerMeans<-matrix(0,4,(maxdelta-mindelta)/interval+1)
+  FAMILYFDRMeans<-matrix(0,4,(maxdelta-mindelta)/interval+1)
+  FAMILYFWERMeans<-matrix(0,4,(maxdelta-mindelta)/interval+1)
   
   #declration of matrices to keep s.deviation, size is # of methods * the number of mu values 
-  OvrPowerSD<-matrix(0,4,(maxMu1-minMu1)/interval+1)
-  AVGPowerSD<-matrix(0,4,(maxMu1-minMu1)/interval+1)
-  AVGFDRSD<-matrix(0,4,(maxMu1-minMu1)/interval+1)
-  OvrFDRSD<-matrix(0,4,(maxMu1-minMu1)/interval+1)
-  AVGFWERSD<-matrix(0,4,(maxMu1-minMu1)/interval+1)
-  OvrFWERSD<-matrix(0,4,(maxMu1-minMu1)/interval+1)
-  OvrFRSD<-matrix(0,4,(maxMu1-minMu1)/interval+1)
-  AVGFRSD<-matrix(0,4,(maxMu1-minMu1)/interval+1)
+  OvrPowerSD<-matrix(0,4,(maxdelta-mindelta)/interval+1)
+  AVGPowerSD<-matrix(0,4,(maxdelta-mindelta)/interval+1)
+  AVGFDRSD<-matrix(0,4,(maxdelta-mindelta)/interval+1)
+  OvrFDRSD<-matrix(0,4,(maxdelta-mindelta)/interval+1)
+  AVGFWERSD<-matrix(0,4,(maxdelta-mindelta)/interval+1)
+  OvrFWERSD<-matrix(0,4,(maxdelta-mindelta)/interval+1)
+  OvrFRSD<-matrix(0,4,(maxdelta-mindelta)/interval+1)
+  AVGFRSD<-matrix(0,4,(maxdelta-mindelta)/interval+1)
   
-  FAMILYpowerSD<-matrix(0,4,(maxMu1-minMu1)/interval+1)
-  FAMILYFDRSD<-matrix(0,4,(maxMu1-minMu1)/interval+1)
-  FAMILYFWERSD<-matrix(0,4,(maxMu1-minMu1)/interval+1)
+  FAMILYpowerSD<-matrix(0,4,(maxdelta-mindelta)/interval+1)
+  FAMILYFDRSD<-matrix(0,4,(maxdelta-mindelta)/interval+1)
+  FAMILYFWERSD<-matrix(0,4,(maxdelta-mindelta)/interval+1)
   #   PowerOutput<-list()
   
-  for (mu in seq(minMu1,maxMu1,interval)){
+  for (delta in seq(mindelta,maxdelta,interval)){
     
-    #matrices for each mu1
+    #matrices for each delta
     TotalAVGFDR<-matrix(0,4,n)
     TotalAVGFWER<-matrix(0,4,n)
     TotalAVGPower<-matrix(0,4,n)
@@ -250,7 +250,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
     FAMILYFWER<-matrix(0,4,n)
     FAMILYFR<-matrix(0,4,n)
     
-    print (mu)
+    print (delta)
     #     readline()
     
     #each iteration
@@ -304,7 +304,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
           familyArray[[i]]@refVec=setRefVectorBig(
             size=numOfGroups,
             numOfZeros=numOfGroups-numOfTrues,
-            mu=mu,
+            mu=delta,
             DesVector=DesVector,
             details=FALSE)
           
@@ -312,21 +312,21 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
           #           print (familyArray[[i]]@refVec)
           #build reference Vector
           tempDes<-DesVector
-          tempDes[tempDes==0]<-(-mu)
+#           tempDes[tempDes==0]<-(-delta)
           familyArray[[i]]@xbars=getRandomXBars(size=numOfGroups,
                                                 numOfTrues=numOfGroups-1,
-                                                falsesMu1=mu,
+                                                falsesMu1=delta,
                                                 sd=sqrt(1/groupSize),
-                                                DesVector=tempDes+mu,
+                                                DesVector=tempDes*delta,
                                                 details=FALSE)
         }
         else { #35 families no signal
           familyArray[[i]]@refVec=setRefVectorBig(
             size=numOfGroups,
             numOfZeros=numOfGroups,
-            mu=mu)
+            mu=delta)
           
-          #build reference Vector (we set numOfTrues as 1 and falsesMu1 as 0 so that all xbars are
+          #build reference Vector (we set numOfTrues as 1 and falsesdelta as 0 so that all xbars are
           #generated around 0, the value of numOfTrues doesnt matter here)
           familyArray[[i]]@xbars=getRandomXBars(size=numOfGroups,
                                                 numOfTrues=1,
@@ -518,10 +518,10 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
             OverallFR[methodix]=OverallFR[methodix]+familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@proceduresApplied[[methodix]]@fr
             OverallRejectsLength[methodix]=OverallRejectsLength[methodix]+familyArray[[SelectedFamilies[[methodix]]$ix[i]]]@
               proceduresApplied[[methodix]]@rejects$length
-            
-            print ("OVR REJECTS LENGTH")
-            print (c("methodix", methodix))
-            print (OverallRejectsLength[methodix])
+#             
+#             print ("OVR REJECTS LENGTH")
+#             print (c("methodix", methodix))
+#             print (OverallRejectsLength[methodix])
             
           } #end for loop of i selected families     
           #           print (c("OVERALL REJECTS LENGTH method :", methodix ,OverallRejectsLength[methodix]))
@@ -560,7 +560,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
             TotalOvrFWER[methodix, iters]<-0
           }
           
-          print (c("Iteration:", iters, "mu1:", mu, "method:", methodix))
+          print (c("Iteration:", iters, "delta:", delta, "method:", methodix))
           print (c("Average FDR:", FDRSum[methodix]/SelectedFamilies[[methodix]]$length))
           print (c("Overall FDR: ",  OverallFR[methodix]/OverallRejectsLength[methodix]))
           print (c("Average FWER: ", FWERSum[methodix]/SelectedFamilies[[methodix]]$length))
@@ -601,39 +601,39 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
     
     for (methodix in 1:4){
       #calc final means
-      AVGFDRMeans[methodix,(mu-minMu1)/interval+1]<-mean(TotalAVGFDR[methodix,])
-      AVGFWERMeans[methodix,(mu-minMu1)/interval+1]<-mean(TotalAVGFWER[methodix,])
-      AVGFRMeans[methodix,(mu-minMu1)/interval+1]<-mean(TotalAVGFR[methodix,])
-      AVGPowerMeans[methodix,(mu-minMu1)/interval+1]<-mean(TotalAVGPower[methodix,])
+      AVGFDRMeans[methodix,(delta-mindelta)/interval+1]<-mean(TotalAVGFDR[methodix,])
+      AVGFWERMeans[methodix,(delta-mindelta)/interval+1]<-mean(TotalAVGFWER[methodix,])
+      AVGFRMeans[methodix,(delta-mindelta)/interval+1]<-mean(TotalAVGFR[methodix,])
+      AVGPowerMeans[methodix,(delta-mindelta)/interval+1]<-mean(TotalAVGPower[methodix,])
       
-      OvrPowerMeans[methodix,(mu-minMu1)/interval+1]<-mean(TotalOvrPower[methodix,])
-      OvrFDRMeans[methodix,(mu-minMu1)/interval+1]<-mean(TotalOvrFDR[methodix,])
-      OvrFWERMeans[methodix,(mu-minMu1)/interval+1]<-mean(TotalOvrFWER[methodix,])
-      OvrFRMeans[methodix,(mu-minMu1)/interval+1]<-mean(TotalOvrFR[methodix,])
+      OvrPowerMeans[methodix,(delta-mindelta)/interval+1]<-mean(TotalOvrPower[methodix,])
+      OvrFDRMeans[methodix,(delta-mindelta)/interval+1]<-mean(TotalOvrFDR[methodix,])
+      OvrFWERMeans[methodix,(delta-mindelta)/interval+1]<-mean(TotalOvrFWER[methodix,])
+      OvrFRMeans[methodix,(delta-mindelta)/interval+1]<-mean(TotalOvrFR[methodix,])
       
-      FAMILYFDRMeans[methodix,(mu-minMu1)/interval+1]<-mean(FAMILYFDR[methodix,])
-      FAMILYFWERMeans[methodix,(mu-minMu1)/interval+1]<-mean(FAMILYFWER[methodix,])
-      FAMILYpowerMeans[methodix,(mu-minMu1)/interval+1]<-mean(FAMILYpower[methodix,])
+      FAMILYFDRMeans[methodix,(delta-mindelta)/interval+1]<-mean(FAMILYFDR[methodix,])
+      FAMILYFWERMeans[methodix,(delta-mindelta)/interval+1]<-mean(FAMILYFWER[methodix,])
+      FAMILYpowerMeans[methodix,(delta-mindelta)/interval+1]<-mean(FAMILYpower[methodix,])
       #calc final SDs
-      AVGFDRSD[methodix,(mu-minMu1)/interval+1]<-sd(TotalAVGFDR[methodix,])
-      OvrPowerSD[methodix,(mu-minMu1)/interval+1] <-sd(TotalOvrPower[methodix,])   
-      AVGFWERSD[methodix,(mu-minMu1)/interval+1]<-sd(TotalAVGFWER[methodix,])
-      AVGFRSD[methodix,(mu-minMu1)/interval+1]<-sd(TotalAVGFR[methodix,])
+      AVGFDRSD[methodix,(delta-mindelta)/interval+1]<-sd(TotalAVGFDR[methodix,])
+      OvrPowerSD[methodix,(delta-mindelta)/interval+1] <-sd(TotalOvrPower[methodix,])   
+      AVGFWERSD[methodix,(delta-mindelta)/interval+1]<-sd(TotalAVGFWER[methodix,])
+      AVGFRSD[methodix,(delta-mindelta)/interval+1]<-sd(TotalAVGFR[methodix,])
       
-      OvrPowerSD[methodix,(mu-minMu1)/interval+1]<-sd(TotalOvrPower[methodix,])
-      OvrFDRSD[methodix,(mu-minMu1)/interval+1]<-sd(TotalOvrFDR[methodix,])
-      OvrFWERSD[methodix,(mu-minMu1)/interval+1]<-sd(TotalOvrFWER[methodix,])
-      OvrFRSD[methodix,(mu-minMu1)/interval+1]<-sd(TotalOvrFR[methodix,])
+      OvrPowerSD[methodix,(delta-mindelta)/interval+1]<-sd(TotalOvrPower[methodix,])
+      OvrFDRSD[methodix,(delta-mindelta)/interval+1]<-sd(TotalOvrFDR[methodix,])
+      OvrFWERSD[methodix,(delta-mindelta)/interval+1]<-sd(TotalOvrFWER[methodix,])
+      OvrFRSD[methodix,(delta-mindelta)/interval+1]<-sd(TotalOvrFR[methodix,])
       
-      FAMILYFDRSD[methodix,(mu-minMu1)/interval+1]<-sd(FAMILYFDR[methodix,])
-      FAMILYFWERSD[methodix,(mu-minMu1)/interval+1]<-sd(FAMILYFWER[methodix,])
-      FAMILYpowerSD[methodix,(mu-minMu1)/interval+1]<-sd(FAMILYpower[methodix,])
+      FAMILYFDRSD[methodix,(delta-mindelta)/interval+1]<-sd(FAMILYFDR[methodix,])
+      FAMILYFWERSD[methodix,(delta-mindelta)/interval+1]<-sd(FAMILYFWER[methodix,])
+      FAMILYpowerSD[methodix,(delta-mindelta)/interval+1]<-sd(FAMILYpower[methodix,])
       
       #			print ('Ovr fdrmeans')
       #			print (OvrFDRMeans)
       
     } #end methodix for 
-    #     PowerOutput[[(mu-minMu1)/interval+1]]=TotalOvrPower
+    #     PowerOutput[[(mu-mindelta)/interval+1]]=TotalOvrPower
   } #end mu for
   
   
@@ -644,12 +644,12 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
   #	print (AVGFDRMeans[2,])
   #	
   
-  plot (seq(minMu1,maxMu1,interval),OvrPowerMeans[1,], 
+  plot (seq(mindelta,maxdelta,interval),OvrPowerMeans[1,], 
         col="blue", ylim=c(0,1),xlab= "mu", ylab= "Overall Power",
-        main =c("Overall Power/mu1 in", n, "iterations with methods 1-4"), type="o")
-  lines (seq(minMu1,maxMu1,interval),OvrPowerMeans[2,], col="red", type="o")
-  lines (seq(minMu1,maxMu1,interval),OvrPowerMeans[3,], col="green", type="o")
-  lines (seq(minMu1,maxMu1,interval),OvrPowerMeans[4,], col="pink", type="o")
+        main =c("Overall Power/delta in", n, "iterations with methods 1-4"), type="o")
+  lines (seq(mindelta,maxdelta,interval),OvrPowerMeans[2,], col="red", type="o")
+  lines (seq(mindelta,maxdelta,interval),OvrPowerMeans[3,], col="green", type="o")
+  lines (seq(mindelta,maxdelta,interval),OvrPowerMeans[4,], col="pink", type="o")
   
   
   legend("topleft", 
@@ -659,14 +659,14 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
          lwd=c(2,2,2,2),
          col=c("blue","red", "green", "pink")
   )
-  plot (seq(minMu1,maxMu1,interval),AVGFDRMeans[1,], 
+  plot (seq(mindelta,maxdelta,interval),AVGFDRMeans[1,], 
         col="blue", ylim=c(0,0.2),xlab= "mu", ylab= "FDR",
-        main =c("FDRs/mu1 in", n, "iterations"), type="o")
-  lines (seq(minMu1,maxMu1,interval),OvrFDRMeans[1,], col="red", type="o")
-  lines (seq(minMu1,maxMu1,interval),AVGFDRMeans[2,], col="green", type="o")
-  lines (seq(minMu1,maxMu1,interval),OvrFDRMeans[2,], col="pink", type="o")
-  lines (seq(minMu1,maxMu1,interval),OvrFDRMeans[3,], col="brown", type="o")
-  lines (seq(minMu1,maxMu1,interval),OvrFDRMeans[4,], col="cyan", type="o")
+        main =c("FDRs/delta in", n, "iterations"), type="o")
+  lines (seq(mindelta,maxdelta,interval),OvrFDRMeans[1,], col="red", type="o")
+  lines (seq(mindelta,maxdelta,interval),AVGFDRMeans[2,], col="green", type="o")
+  lines (seq(mindelta,maxdelta,interval),OvrFDRMeans[2,], col="pink", type="o")
+  lines (seq(mindelta,maxdelta,interval),OvrFDRMeans[3,], col="brown", type="o")
+  lines (seq(mindelta,maxdelta,interval),OvrFDRMeans[4,], col="cyan", type="o")
   abline (h=0.05, col="black")
   
   legend("topleft", 
@@ -678,15 +678,15 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
          lwd=c(2,2,2,2),
          col=c("blue","red", "green", "pink", "brown","cyan")
   )
-  plot (seq(minMu1,maxMu1,interval),AVGFWERMeans[1,], 
+  plot (seq(mindelta,maxdelta,interval),AVGFWERMeans[1,], 
         col="blue", ylim=c(0,1),xlab= "mu", ylab= "FWER",
-        main =c("FWERs/mu1 in", n, "iterations"), type="o")
-  lines (seq(minMu1,maxMu1,interval),OvrFWERMeans[1,], col="red", type="o")
-  lines (seq(minMu1,maxMu1,interval),AVGFWERMeans[2,], col="green", type="o")
-  lines (seq(minMu1,maxMu1,interval),OvrFWERMeans[2,], col="pink", type="o")
-  lines (seq(minMu1,maxMu1,interval),OvrFWERMeans[3,], col="brown", type="o")
-  lines (seq(minMu1,maxMu1,interval),AVGFWERMeans[4,], col="grey", type="o")
-  lines (seq(minMu1,maxMu1,interval),OvrFWERMeans[4,], col="cyan", type="o")
+        main =c("FWERs/delta in", n, "iterations"), type="o")
+  lines (seq(mindelta,maxdelta,interval),OvrFWERMeans[1,], col="red", type="o")
+  lines (seq(mindelta,maxdelta,interval),AVGFWERMeans[2,], col="green", type="o")
+  lines (seq(mindelta,maxdelta,interval),OvrFWERMeans[2,], col="pink", type="o")
+  lines (seq(mindelta,maxdelta,interval),OvrFWERMeans[3,], col="brown", type="o")
+  lines (seq(mindelta,maxdelta,interval),AVGFWERMeans[4,], col="grey", type="o")
+  lines (seq(mindelta,maxdelta,interval),OvrFWERMeans[4,], col="cyan", type="o")
   abline (h=0.05, col="black")
   
   legend("topleft", 
@@ -699,15 +699,15 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
          col=c("blue","red", "green", "pink", "brown","grey", "cyan")
   )
   
-  plot (seq(minMu1,maxMu1,interval),AVGFRMeans[1,], 
+  plot (seq(mindelta,maxdelta,interval),AVGFRMeans[1,], 
         col="blue", ylim=c(0,3),xlab= "mu", ylab= "E[V]",
-        main =c("E[V]s/mu1 in", n, "iterations"), type="o")
-  lines (seq(minMu1,maxMu1,interval),OvrFRMeans[1,], col="red", type="o")
-  lines (seq(minMu1,maxMu1,interval),AVGFRMeans[2,], col="green", type="o")
-  lines (seq(minMu1,maxMu1,interval),OvrFRMeans[2,], col="pink", type="o")
-  lines (seq(minMu1,maxMu1,interval),OvrFRMeans[3,], col="brown", type="o")
-  lines (seq(minMu1,maxMu1,interval),AVGFRMeans[4,], col="yellow", type="o")
-  lines (seq(minMu1,maxMu1,interval),OvrFRMeans[4,], col="grey", type="o")
+        main =c("E[V]s/delta in", n, "iterations"), type="o")
+  lines (seq(mindelta,maxdelta,interval),OvrFRMeans[1,], col="red", type="o")
+  lines (seq(mindelta,maxdelta,interval),AVGFRMeans[2,], col="green", type="o")
+  lines (seq(mindelta,maxdelta,interval),OvrFRMeans[2,], col="pink", type="o")
+  lines (seq(mindelta,maxdelta,interval),OvrFRMeans[3,], col="brown", type="o")
+  lines (seq(mindelta,maxdelta,interval),AVGFRMeans[4,], col="yellow", type="o")
+  lines (seq(mindelta,maxdelta,interval),OvrFRMeans[4,], col="grey", type="o")
   abline (h=0.05, col="black")
   
   legend("topleft", 
@@ -719,15 +719,15 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
          lwd=c(2,2,2,2),
          col=c("blue","red", "green", "pink", "brown","yellow","grey")
   )
-  plot (seq(minMu1,maxMu1,interval),AVGFWERMeans[1,] , col="blue", ylim=c(0,0.5),
+  plot (seq(mindelta,maxdelta,interval),AVGFWERMeans[1,] , col="blue", ylim=c(0,0.5),
         ylab="FWER/E[V]", xlab="mu",
-        main =c("Avg FWER and Avg E[V]/mu1 in", n, "iterations with methods 1,2,4"), type="o")
+        main =c("Avg FWER and Avg E[V]/delta in", n, "iterations with methods 1,2,4"), type="o")
   #    readline()
-  lines (seq(minMu1,maxMu1,interval),AVGFRMeans[1,], col="red", type="o")
-  lines (seq(minMu1,maxMu1,interval),AVGFWERMeans[2,], col="green", type="o")
-  lines (seq(minMu1,maxMu1,interval),AVGFRMeans[2,], col="pink", type="o")
-  lines (seq(minMu1,maxMu1,interval),AVGFWERMeans[4,], col="yellow", type="o")
-  lines (seq(minMu1,maxMu1,interval),AVGFRMeans[4,], col="grey", type="o")
+  lines (seq(mindelta,maxdelta,interval),AVGFRMeans[1,], col="red", type="o")
+  lines (seq(mindelta,maxdelta,interval),AVGFWERMeans[2,], col="green", type="o")
+  lines (seq(mindelta,maxdelta,interval),AVGFRMeans[2,], col="pink", type="o")
+  lines (seq(mindelta,maxdelta,interval),AVGFWERMeans[4,], col="yellow", type="o")
+  lines (seq(mindelta,maxdelta,interval),AVGFRMeans[4,], col="grey", type="o")
   legend("topleft", 
          legend= c("Average FWER method 1","E[V] over the selected method 1",
                    "Average FWER method 2","E[V] over the selected method 2",
@@ -738,29 +738,29 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
   )
   
   #change column names in table
-  colnames(OvrPowerMeans)<-seq(minMu1,maxMu1,interval)
-  colnames(AVGPowerMeans)<-seq(minMu1,maxMu1,interval)
-  colnames(OvrFDRMeans)<-seq(minMu1,maxMu1,interval)
-  colnames(AVGFDRMeans)<-seq(minMu1,maxMu1,interval)
-  colnames(OvrFWERMeans)<-seq(minMu1,maxMu1,interval)
-  colnames(OvrFRMeans)<-seq(minMu1,maxMu1,interval)
-  colnames(AVGFRMeans)<-seq(minMu1,maxMu1,interval)
-  colnames(AVGFWERMeans)<-seq(minMu1,maxMu1,interval)
-  colnames(FAMILYFWERMeans)<-seq(minMu1,maxMu1,interval)
-  colnames(FAMILYFDRMeans)<-seq(minMu1,maxMu1,interval)
-  colnames(FAMILYpowerMeans)<-seq(minMu1,maxMu1,interval)
+  colnames(OvrPowerMeans)<-seq(mindelta,maxdelta,interval)
+  colnames(AVGPowerMeans)<-seq(mindelta,maxdelta,interval)
+  colnames(OvrFDRMeans)<-seq(mindelta,maxdelta,interval)
+  colnames(AVGFDRMeans)<-seq(mindelta,maxdelta,interval)
+  colnames(OvrFWERMeans)<-seq(mindelta,maxdelta,interval)
+  colnames(OvrFRMeans)<-seq(mindelta,maxdelta,interval)
+  colnames(AVGFRMeans)<-seq(mindelta,maxdelta,interval)
+  colnames(AVGFWERMeans)<-seq(mindelta,maxdelta,interval)
+  colnames(FAMILYFWERMeans)<-seq(mindelta,maxdelta,interval)
+  colnames(FAMILYFDRMeans)<-seq(mindelta,maxdelta,interval)
+  colnames(FAMILYpowerMeans)<-seq(mindelta,maxdelta,interval)
   
-  colnames(OvrPowerSD)<-seq(minMu1,maxMu1,interval)
-  colnames(AVGPowerSD)<-seq(minMu1,maxMu1,interval)
-  colnames(OvrFDRSD)<-seq(minMu1,maxMu1,interval)
-  colnames(AVGFDRSD)<-seq(minMu1,maxMu1,interval)
-  colnames(OvrFWERSD)<-seq(minMu1,maxMu1,interval)
-  colnames(OvrFRSD)<-seq(minMu1,maxMu1,interval)
-  colnames(AVGFRSD)<-seq(minMu1,maxMu1,interval)
-  colnames(AVGFWERSD)<-seq(minMu1,maxMu1,interval)
-  colnames(FAMILYFWERSD)<-seq(minMu1,maxMu1,interval)
-  colnames(FAMILYFDRSD)<-seq(minMu1,maxMu1,interval)
-  colnames(FAMILYpowerSD)<-seq(minMu1,maxMu1,interval)
+  colnames(OvrPowerSD)<-seq(mindelta,maxdelta,interval)
+  colnames(AVGPowerSD)<-seq(mindelta,maxdelta,interval)
+  colnames(OvrFDRSD)<-seq(mindelta,maxdelta,interval)
+  colnames(AVGFDRSD)<-seq(mindelta,maxdelta,interval)
+  colnames(OvrFWERSD)<-seq(mindelta,maxdelta,interval)
+  colnames(OvrFRSD)<-seq(mindelta,maxdelta,interval)
+  colnames(AVGFRSD)<-seq(mindelta,maxdelta,interval)
+  colnames(AVGFWERSD)<-seq(mindelta,maxdelta,interval)
+  colnames(FAMILYFWERSD)<-seq(mindelta,maxdelta,interval)
+  colnames(FAMILYFDRSD)<-seq(mindelta,maxdelta,interval)
+  colnames(FAMILYpowerSD)<-seq(mindelta,maxdelta,interval)
   #   rownames(OvrPowerMeans)<-c("QTukey Stat", "Pairwise", "Overall BH", "BH BH")
   
   print ("OVERALL POWER:")
@@ -870,5 +870,5 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
 }
 
 #tukeyTest2(n=100)
-# tukeyTest2(n=50, numOfGroups=5,numOfTrues=1, interval=0.5, minMu1=0, maxMu1=4,details=FALSE)
-tukeyTest2(n=10, numOfGroups=5,numOfTrues=1, interval=0.5, minMu1=0, maxMu1=2,DesVector=c(0,2,2,4,4), details=FALSE)
+# tukeyTest2(n=50, numOfGroups=5,numOfTrues=1, interval=0.5, mindelta=1, maxdelta=4,details=FALSE)
+tukeyTest2(n=50, numOfGroups=5,numOfTrues=1, interval=0.5, mindelta=1, maxdelta=1,DesVector=c(0,0,0,0,4), details=FALSE)
