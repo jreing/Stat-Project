@@ -269,13 +269,15 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
       FWERSum <- numeric(4)
       POWERSum <- numeric(4)
       
-      if (!is.nan(DesVector[1])){
-        numOfGroups=length(DesVector)
-        tempDes=as.logical(dist(DesVector))
-        numOfTrues=length(tempDes[tempDes==TRUE])
-#         print (numOfGroups)
-#         print (numOfTrues)
+      if (is.nan(DesVector[1])){ #if desvector was not entered
+        DesVector=c(rep(0,numOfGroups-numOfTrues), rep(1,numOfTrues))
       }
+      numOfGroups=length(DesVector)
+      tempDes=as.logical(dist(DesVector))
+      numOfTrues=length(tempDes[tempDes==TRUE])
+        #         print (numOfGroups)
+        #         print (numOfTrues)
+  
       jointFamily <- new ("iteration",
                           size=choose(numOfGroups,2)*numOfFamilies,
                           numOfTrues=0+
@@ -421,7 +423,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
       ##method 1/2/4 step 2: #process BH/QTukey on selected families
       for (methodix in 1:4){ #run through methods
         
-                print (c("METHOD:", methodix))
+#                 print (c("METHOD:", methodix))
         if (SelectedFamilies[[methodix]]$length>0){   #if there are any selected families
           for (i in 1:SelectedFamilies[[methodix]]$length){ #run thru selected families
             
@@ -559,14 +561,15 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
           if (is.nan(TotalOvrFWER[methodix, iters])) {
             TotalOvrFWER[methodix, iters]<-0
           }
-          
-          print (c("Iteration:", iters, "delta:", delta, "method:", methodix))
-          print (c("Average FDR:", FDRSum[methodix]/SelectedFamilies[[methodix]]$length))
-          print (c("Overall FDR: ",  OverallFR[methodix]/OverallRejectsLength[methodix]))
-          print (c("Average FWER: ", FWERSum[methodix]/SelectedFamilies[[methodix]]$length))
-          print (c("Overall FR: ", OverallFR[methodix]))
-          print (c("Interesting Families () are",SelectedFamilies[[methodix]]))
-          #readline()
+          if (details==TRUE){
+            print (c("Iteration:", iters, "delta:", delta, "method:", methodix))
+            print (c("Average FDR:", FDRSum[methodix]/SelectedFamilies[[methodix]]$length))
+            print (c("Overall FDR: ",  OverallFR[methodix]/OverallRejectsLength[methodix]))
+            print (c("Average FWER: ", FWERSum[methodix]/SelectedFamilies[[methodix]]$length))
+            print (c("Overall FR: ", OverallFR[methodix]))
+            print (c("Interesting Families () are",SelectedFamilies[[methodix]]))
+            #readline()
+          }
           
           
         } #end if selected families exist
@@ -840,7 +843,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
   saveWorkbook(wb)
   
   #export to EXCEL SDs
-  wb<-loadWorkbook(paste("TukeyTest sd",Sys.Date(),"numOfGroups=",numOfGroups,"n=",n,".xls"), create = TRUE)
+  wb<-loadWorkbook(paste("TukeyTest sd",format(Sys.time(), "%d%m%y-%H-%M"),"numOfGroups=",numOfGroups,"n=",n,".xls"), create = TRUE)
   
   createSheet(wb, name = "AVG FDR")
   writeWorksheet(wb, cbind(METHOD_NAMES,AVGFDRSD), sheet = "AVG FDR")
@@ -869,6 +872,29 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
   #   print(PowerOutput)
 }
 
+
+
 #tukeyTest2(n=100)
-# tukeyTest2(n=50, numOfGroups=5,numOfTrues=1, interval=0.5, mindelta=1, maxdelta=4,details=FALSE)
-tukeyTest2(n=50, numOfGroups=5,numOfTrues=1, interval=0.5, mindelta=1, maxdelta=1,DesVector=c(0,0,0,0,4), details=FALSE)
+tukeyTest2(n=50, numOfGroups=5,numOfTrues=1, interval=0.5, mindelta=0, maxdelta=4,details=FALSE)
+tukeyTest2(n=50, numOfGroups=5,numOfTrues=1, interval=0.5, mindelta=0, maxdelta=4,DesVector=c(0,0,0,0,1), details=FALSE)
+
+
+compareWorkBookSDs<- function (name1="TukeyTest sd 161114-14-38 numOfGroups= 5 n= 50.xls" ,
+                               name2="TukeyTest sd 161114-14-37 numOfGroups= 5 n= 50.xls"){
+  setwd("C:/Users/Oria/Documents")
+  wb1<- loadWorkbook(name1)
+  wb2<- loadWorkbook(name2)
+  
+  AVG_FDR_1<-readWorksheetFromFile(name1,
+                                   sheet = "AVG FDR", 
+                                   startRow = 2, endRow = 5,startCol = 2, endCol = 10)
+  AVG_FDR_2<-readWorksheetFromFile(name2,
+                                   sheet = "AVG FDR", 
+                                   startRow = 2, endRow = 5,startCol = 2, endCol = 10)
+ print (AVG_FDR_1[1,1]) 
+ print (AVG_FDR_2[1,1])
+ 
+ f=pf(q=AVG_FDR_1-AVG_FDR_2,df1=50,df2=50,lower.tail=TRUE)
+ print(f)
+}
+compareWorkBookSDs()
