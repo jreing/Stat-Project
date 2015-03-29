@@ -202,6 +202,8 @@ setRefVectorBig <-function(size, numOfZeros,mu, DesVector=NaN, details=FALSE){
 tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, numOfSignalFamilies=5,
                       mindelta=0, maxdelta=4, interval=0.5, alpha=0.05, groupSize=16,details=FALSE,DesVector=NaN){
   
+  #initilaize timer
+  ptm<-proc.time()
   
   #definition of constant df
   df=numOfGroups*(groupSize-1) #calculate degs of freedom
@@ -654,8 +656,8 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
       
     } #end methodix for 
     #     PowerOutput[[(mu-mindelta)/interval+1]]=TotalOvrPower
-  } #end mu for
-  
+  } #end delta for
+
   
   
   #	print (OvrFDRMeans[1,])
@@ -834,10 +836,26 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
     print (FAMILYFWERSD)
     
   }
+
+  #stop timer
+  totalTime= (proc.time()-ptm)[3]
   
+  totalTime=paste(totalTime,collapse="")
+  totalTime=strtrim(totalTime,6)
+#   print(strtrim(totalTime,6))
+
   #export to EXCEL MEANS
-  wb<-loadWorkbook(paste("TukeyTest MEANS",Sys.Date(),"numOfGroups=",numOfGroups,"n=",n,".xls"), create = TRUE)
-  
+  vecString=paste(DesVector, collapse= ",")
+  #   print (vecString)
+  wb<-loadWorkbook(filename=
+    paste(
+      "TukeyTest MEANS",
+      format(Sys.time(), "%d%m%y-%H-%M"),
+      "DesVector=",  vecString, 
+      "TotalTime:", totalTime,
+      "n=",n,".xls"),
+    create = TRUE)
+#   readline()
   createSheet(wb, name = "AVG FDR")
   writeWorksheet(wb, cbind(METHOD_NAMES,AVGFDRMeans), sheet = "AVG FDR")
   createSheet(wb, name = "OVERALL POWER")
@@ -862,8 +880,15 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
   
   saveWorkbook(wb)
   
+ 
   #export to EXCEL SDs
-  wb<-loadWorkbook(paste("TukeyTest sd",format(Sys.time(), "%d%m%y-%H-%M"),"numOfGroups=",numOfGroups,"n=",n,".xls"), create = TRUE)
+  wb<-loadWorkbook(
+    filename=paste("TukeyTest sd",format(Sys.time(), "%d%m%y-%H-%M"),
+                   "DesVector=",  vecString, 
+                   "TotalTime:", totalTime,
+                   "n=",n,".xls"),
+    create = TRUE)
+
   
   createSheet(wb, name = "AVG FDR")
   writeWorksheet(wb, cbind(METHOD_NAMES,AVGFDRSD), sheet = "AVG FDR")
@@ -896,7 +921,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
 
 #tukeyTest2(n=100)
 # tukeyTest2(n=50, numOfGroups=5,numOfTrues=1, interval=0.5, mindelta=0, maxdelta=4,details=FALSE)
-tukeyTest2(n=1,numOfSignalFamilies=50, numOfFamilies=10000,interval=0.5, mindelta=1, maxdelta=2
+tukeyTest2(n=1,numOfSignalFamilies=5, numOfFamilies=10,interval=0.5, mindelta=1, maxdelta=2
            ,DesVector=c(-1,-1,-1,-1,-1,1,1,1,1,1), details=FALSE)
 
 # 
