@@ -665,7 +665,12 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
   #	print (AVGFDRMeans[1,])
   #	print (AVGFDRMeans[2,])
   #	
-  
+  vecString=paste(DesVector, collapse= ",")
+
+  FILENAME=paste("TukeyTest sd",format(Sys.time(), "%d%m%y-%H-%M"),
+                 "DesVector=",  vecString, 
+                 "n=",n)
+
   plot (seq(mindelta,maxdelta,interval),OvrPowerMeans[1,], 
         col="blue", ylim=c(0,1),xlab= "delta", ylab= "Overall Power",
         main =c("Overall Power/delta in", n, "iterations with methods 1-4"), type="o")
@@ -681,12 +686,12 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
          lwd=c(2,2,2,2),
          col=c("blue","red", "green", "pink")
   )
+  dev.copy2pdf(file=paste(FILENAME, "POWER.pdf"))
+
   plot (seq(mindelta,maxdelta,interval),AVGFDRMeans[1,], 
         col="blue", ylim=c(0,max(AVGFDRMeans[1,])+0.5),xlab= "delta", ylab= "FDR",
         main =c("FDRs/delta in", n, "iterations"), type="o",axes=TRUE)
   axis(side=1, at=seq(mindelta,maxdelta,interval));
-  
-  
   lines (seq(mindelta,maxdelta,interval),OvrFDRMeans[1,], col="red", type="o")
   lines (seq(mindelta,maxdelta,interval),AVGFDRMeans[2,], col="green", type="o")
   lines (seq(mindelta,maxdelta,interval),OvrFDRMeans[2,], col="pink", type="o")
@@ -703,6 +708,8 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
          lwd=c(2,2,2,2),
          col=c("blue","red", "green", "pink", "brown","cyan")
   )
+  dev.copy2pdf(file=paste(FILENAME, "FDR"))
+
   plot (seq(mindelta,maxdelta,interval),AVGFWERMeans[1,], 
         col="blue", ylim=c(0,1),xlab= "delta", ylab= "FWER",
         main =c("FWERs/delta in", n, "iterations"), type="o")
@@ -712,8 +719,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
   lines (seq(mindelta,maxdelta,interval),OvrFWERMeans[3,], col="brown", type="o")
   lines (seq(mindelta,maxdelta,interval),AVGFWERMeans[4,], col="grey", type="o")
   lines (seq(mindelta,maxdelta,interval),OvrFWERMeans[4,], col="cyan", type="o")
-  abline (h=0.05, col="black")
-  
+  abline (h=0.05, col="black") 
   legend("topleft", 
          legend= c("AVG FWER over the selected QTukey Stat ", "Overall FWER QTukey Stat ",
                    "AVG FWER over the selected Pairwise", "Overall FWER Pairwise", 
@@ -723,7 +729,8 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
          lwd=c(2,2,2,2),
          col=c("blue","red", "green", "pink", "brown","grey", "cyan")
   )
-  
+  dev.copy2pdf(file=paste(FILENAME, "FWER.pdf"))
+
   plot (seq(mindelta,maxdelta,interval),AVGFRMeans[1,], 
         col="blue", ylim=c(0,3),xlab= "delta", ylab= "E[V]",
         main =c("E[V]s/delta in", n, "iterations"), type="o")
@@ -744,6 +751,8 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
          lwd=c(2,2,2,2),
          col=c("blue","red", "green", "pink", "brown","yellow","grey")
   )
+  dev.copy2pdf(file=paste(FILENAME, "E[V].pdf"))
+
   plot (seq(mindelta,maxdelta,interval),AVGFWERMeans[1,] , col="blue", ylim=c(0,0.5),
         ylab="FWER/E[V]", xlab="delta",
         main =c("Avg FWER and Avg E[V]/delta in", n, "iterations with methods 1,2,4"), type="o")
@@ -761,7 +770,8 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
          lwd=c(2,2,2,2),
          col=c("blue","red", "green", "pink","yellow","grey")
   )
-  
+  dev.copy2pdf(file=paste(FILENAME, "FWERandE[V].pdf"))  
+
   #change column names in table
   colnames(OvrPowerMeans)<-seq(mindelta,maxdelta,interval)
   colnames(AVGPowerMeans)<-seq(mindelta,maxdelta,interval)
@@ -845,8 +855,6 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
 #   print(strtrim(totalTime,6))
 
   #export to EXCEL MEANS
-  vecString=paste(DesVector, collapse= ",")
-  #   print (vecString)
   wb<-loadWorkbook(filename=
     paste(
       "TukeyTest MEANS",
@@ -921,9 +929,34 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
 
 #tukeyTest2(n=100)
 # tukeyTest2(n=50, numOfGroups=5,numOfTrues=1, interval=0.5, mindelta=0, maxdelta=4,details=FALSE)
-tukeyTest2(n=1,numOfSignalFamilies=5, numOfFamilies=10,interval=0.5, mindelta=1, maxdelta=2
-           ,DesVector=c(-1,-1,-1,-1,-1,1,1,1,1,1), details=FALSE)
 
+N=10000
+
+#Series Of Tests:
+for (m1 in c(10,50,100,1000)){
+  for (m in c(1000,10000)){
+    tukeyTest2(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+               ,DesVector=c(0,0,1), details=FALSE)
+    tukeyTest2(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+               ,DesVector=c(-1,0,1), details=FALSE)
+    tukeyTest2(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+               ,DesVector=c(-1,0,1,2), details=FALSE)
+    tukeyTest2(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+               ,DesVector=c(-1,0,0,1), details=FALSE)
+    tukeyTest2(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+               ,DesVector=c(-1,-1,-1,1,1,1), details=FALSE)
+    tukeyTest2(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+               ,DesVector=c(-1,-1,0,0,1,1), details=FALSE)
+    tukeyTest2(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+               ,DesVector=c(-2,-1,0,0,1,2), details=FALSE)
+    tukeyTest2(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+               ,DesVector=c(-1,-1,-1,-1,-1,1,1,1,1,1), details=FALSE)
+    tukeyTest2(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+              ,DesVector=c(-2,-2,-1,-1,0,0,1,1,2,2), details=FALSE)
+    tukeyTest2(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+               ,DesVector=c(-3,-2,-1,0,0,0,0,1,2,3), details=FALSE)
+  }
+}
 # 
 # compareWorkBookSDs<- function (name1="TukeyTest sd 161114-14-38 numOfGroups= 5 n= 50.xls" ,
 #                                name2="TukeyTest sd 161114-14-37 numOfGroups= 5 n= 50.xls"){
