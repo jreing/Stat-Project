@@ -63,19 +63,18 @@ setRefVectorBig <-function(size, numOfZeros,mu, DesVector=NaN, details=FALSE){
   }
   return (as.logical(dist(DesVector)))
 }
-countFalseRejections<-function (rejects , refVec){
-  print ("count FR:")
-  print(rejects)
-  print(refVec)
-  
+countFalseRejections<-function (rejects , refVec,details=FALSE){
+  if (details==TRUE){
+    print ("count FR:")
+    print(c("Rejects:" , rejects, "Ref vec:"))
+    print (rbind(refVec))
+    
+  }
   if (rejects$length==0){ #if there were no rejects at all
+     print ("0 rejects")
     return (0)
   }
-  
-  print ("count FR:")
-  print(rejects)
-  print(refVec)
-  
+
   fr<-0 #false rejections counter
   for (i in 1:rejects$length){ # count num of false rejects
     #         print (c("len", length(refVec)))
@@ -84,7 +83,11 @@ countFalseRejections<-function (rejects , refVec){
       fr<-fr+1
     }
   }
-  print(fr)
+  # print(c("Total false rejections:" , fr))
+  if (fr>0){
+    print(c("Rejects:" , rejects, "Ref vec:"))
+    print (refVec)
+  }
   return (fr) 
 }
 
@@ -93,6 +96,8 @@ countFalseFamilyRejections <- function (rejects, numOfSignalFamilies){
   if (rejects$length==0){ #if there were no rejects at all
     return (0)
   }
+  print ("false family rejections:")
+  print (which(rejects$ix>numOfSignalFamilies))
   return (length(which(rejects$ix>numOfSignalFamilies)))
 }
 
@@ -153,11 +158,16 @@ calcPairwisePVals <-function (xbars,S,groupSize, numOfGroups,details=FALSE){
 }
 
 calcSimesPVals<- function (PVals){
+  #gets a matrix of pairwise-pvals as input
+  #outputs the min of every row in a vector of simes pvals
+  
+  # print (PVals[i,])
   simes=numeric(nrow(PVals))
   for (i in 1:nrow(PVals)){
-    simes[i]=min(p.adjust(PVals, method="BH"))
+    simes[i]=min(p.adjust(PVals[i,], method="BH"))
   }
   return (simes)
+  
 }
 
 
@@ -179,6 +189,7 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups, groupSize, delta
     mu=delta,
     DesVector=DesVector,
     details=FALSE)
+  noSignalRefVec=rep(FALSE,choose(numOfGroups,2))
   
   #definition of constants df and S
   df=numOfGroups*(groupSize-1) #calculate degs of freedom
@@ -201,13 +212,16 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups, groupSize, delta
     #         print (familiesTukeyPVals)
   }
   if (methodix==4){
+    print(pairwisePVals)
     familiesSimesPVals=calcSimesPVals(pairwisePVals)
+    print(familiesSimesPVals)
   }
   
   #3. select families according to desired method
   if (methodix==1 || methodix==2){
     #methods 1/2: select using Tukey pvals
     SelectedFamilies<-SelectFamiliesBH(familiesTukeyPVals)
+    print ("Selected Families:")
     print (SelectedFamilies)
   }
   
@@ -247,12 +261,17 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups, groupSize, delta
   for (i in 1:(SelectedFamilies$length)){ #run thru selected families
     #update matrix to indicate this family has been rejected
     #print (SelectedFamilies$ix)
+    
+    #change refVector after finishing iterating thru signal families
+    #to an all FALSE ref vec.
+    if (i>numOfSignalFamilies){
+      refVec=noSignalRefVec;
+  }
     statsMatrix[SelectedFamilies$ix[i],"SELECTED"]<-TRUE;
     
     if (methodix==1 || methodix==4){
       #method 1=Tukey BH
       #method 4= BH BH (simes)
-      #print ("1")
       
       # reject inside the selected families with BH alpha=0.05*r/m
       
@@ -301,8 +320,8 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups, groupSize, delta
     #calc frs,power,fdr,fwer for the ith selectedfamily
     
     statsMatrix[SelectedFamilies$ix[i], "FR"]=
-      countFalseRejections(rejects=rejects, refVec=refVec)
-    print ("fr finished")
+      countFalseRejections(rejects=rejects, refVec=refVec,details=FALSE)
+    # print ("fr finished")
     statsMatrix[SelectedFamilies$ix[i], "POWER"]=
       calcPower(rejects$length,
                 statsMatrix[SelectedFamilies$ix[i], "FR"], 
@@ -320,13 +339,17 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups, groupSize, delta
 tukeyTestSplit<-function (n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, numOfSignalFamilies=5,
                           mindelta=0, maxdelta=4, interval=0.5, alpha=0.05, groupSize=16,details=FALSE,
                           DesVector=NaN,methodix=1){
-  
+  print(methodix)
   numOfGroups=length(DesVector)
+  print ("Num Of Entered Groups:")
   print(numOfGroups)
+  
   #first numOfSignalFamilies with signal
-  xbars<-getRandomXBars(sd=sqrt(1/groupSize),
-                        DesVector=DesVector)
-  for (i in 2:numOfSignalFamilies){
+  xbars<-NULL
+  #we get random XBars using sd equals to sqrt(1/groupSize) for the signal 
+  #families
+  
+  for (i in 1:numOfSignalFamilies){
     xbars<-rbind(xbars,getRandomXBars(sd=sqrt(1/groupSize),
                                       DesVector=DesVector))
   }
@@ -335,12 +358,14 @@ tukeyTestSplit<-function (n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1
     xbars<-rbind(xbars,getRandomXBars(sd=sqrt(1/groupSize),
                                       DesVector=rep(0,length(DesVector)) ))
   }
-#       print ("XBARS")
-#       print (xbars)
-#   print (nrow(xbars))
+      print ("XBARS")
+      print (xbars)
+  print (c("Number of Rows of Xbars:", nrow(xbars)))
   
   stats<-iteration(xbars=xbars, numOfSignalFamilies=numOfSignalFamilies, 
-                   numOfGroups=numOfGroups, groupSize=groupSize, delta=1,methodix=1, DesVector=DesVector)
-  print (na.omit(stats))
+                   numOfGroups=numOfGroups, groupSize=groupSize, delta=1,methodix=methodix, DesVector=DesVector)
+  #print only rows representing families that were rejected
+  print (stats[!is.na(stats[,"FDR"]),])
+  
 }
 
