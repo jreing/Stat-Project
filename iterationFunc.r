@@ -162,6 +162,7 @@ calcSimesPVals<- function (PVals){
   #outputs the min of every row in a vector of simes pvals
   
   # print (PVals[i,])
+ 
   simes=numeric(nrow(PVals))
   for (i in 1:nrow(PVals)){
     simes[i]=min(p.adjust(PVals[i,], method="BH"))
@@ -229,6 +230,8 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups, groupSize, delta
     #method 3 - overall BH - take joint family and reject in it using BH
     bigFamilyRejects=Preject(method="BH", pvals=as.numeric(pairwisePVals), alpha=0.05)
     SelectedFamilies<-OverallBHSelectedFamilies(bigFamilyRejects, numOfGroups)
+    print ("method3 bigfamily rejects")
+    print (bigFamilyRejects)
     print ("selected families 3:")      
     print (SelectedFamilies)
   }
@@ -368,4 +371,3 @@ tukeyTestSplit<-function (n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1
   print (stats[!is.na(stats[,"FDR"]),])
   
 }
-
