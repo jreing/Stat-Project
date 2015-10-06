@@ -135,9 +135,16 @@ setDesVector <-function (size, numOfZeros,mu=4){
 }
 
 setRefVectorBig <-function(size, numOfZeros,mu){
+setRefVectorBig <-function(size, numOfZeros,mu, details=FALSE){
   DesVector<-setDesVector(size,numOfZeros,mu)
   #   print ("DesVector:")
   #   print (DesVector)
+  if (details==TRUE){
+     print ("DesVector:")
+     print (DesVector)
+     print ("RefVector:")
+     print (as.logical(dist(DesVector)))
+  }
   return (as.logical(dist(DesVector)))
 }
 
@@ -167,7 +174,10 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
   #definition of constant df
   df=numOfGroups*(groupSize-1) #calculate degs of freedom
   
-  #declration of matrices to keep means, size is # of methods * the number of mu values 
+  #define constant methodnames
+  METHOD_NAMES=rbind("QTukey Stat", "Pairwise", "Overall BH", "BH BH(Simes)")
+  
+  #decleration of matrices to keep means, size is # of methods * the number of mu values 
   OvrPowerMeans<-matrix(0,4,(maxMu1-minMu1)/interval+1)
   AVGFDRMeans<-matrix(0,4,(maxMu1-minMu1)/interval+1)
   OvrFDRMeans<-matrix(0,4,(maxMu1-minMu1)/interval+1)

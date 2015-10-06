@@ -1,0 +1,56 @@
+
+compareWorkBookSDs<- function (name1="TukeyTest means 251114-00-55 numOfGroups= 5 n= 10000 .xls",
+                               name2="TukeyTest means 241114-23-04 numOfGroups= 5 n= 10000 .xls",
+                               name1sd="TukeyTest sd 251114-00-55 numOfGroups= 5 n= 10000 .xls" ,
+                               name2sd="TukeyTest sd 241114-23-04 numOfGroups= 5 n= 10000 .xls"){
+  setwd("C:/Users/Oria/Documents")
+  wb1<- loadWorkbook(name1)
+#   wb2<- loadWorkbook(name2)
+#   wb1sd<- loadWorkbook(name1sd)
+#   wb2sd<- loadWorkbook(name2sd)
+  sheets <- getSheets(wb1)
+  print (sheets)
+  METHOD_NAMES=rbind("QTukey Stat", "Pairwise", "Overall BH", "BH BH(Simes)")
+  mindelta=0
+  maxdelta=4
+  interval=0.5
+
+
+  for (sheet in sheets){
+      DATA_1<-readWorksheetFromFile(name1,
+                                         sheet = sheet, 
+                                         startRow = 1, endRow = 5,startCol = 2, endCol = 10)
+      DATA_2<-readWorksheetFromFile(name2,
+                                         sheet = sheet, 
+                                         startRow = 1, endRow = 5,startCol = 2, endCol = 10)
+      
+      DATA_1sd<-readWorksheetFromFile(name1sd,
+                                       sheet = sheet, 
+                                       startRow = 1, endRow = 5,startCol = 2, endCol = 10)
+      DATA_2sd<-readWorksheetFromFile(name2sd,
+                                       sheet = sheet, 
+                                       startRow = 1, endRow = 5,startCol = 2, endCol = 10)
+     
+      DATA_1= matrix(as.numeric(unlist(DATA_1)),ncol=9, byrow = TRUE)
+      DATA_2= matrix(as.numeric(unlist(DATA_2)),ncol=9, byrow = TRUE)
+      DATA_1sd= matrix(as.numeric(unlist(DATA_1sd)),ncol=9, byrow = TRUE)
+      DATA_2sd= matrix(as.numeric(unlist(DATA_2sd)),ncol=9, byrow = TRUE)
+      print (sheet)
+      print (name1)
+      print (DATA_1)
+      print (name2)
+      print (DATA_2)
+      
+      print ("result:")
+      a= abs(DATA_1-DATA_2)
+#       print (a)
+ 
+      result=a/sqrt((DATA_1sd^2+sqrt(DATA_2sd^2))/10000)
+      print(result)
+      colnames(result)<-seq(mindelta,maxdelta,interval)
+      
+      writeWorksheetToFile (paste ("comparison",name1,name2), data=cbind(METHOD_NAMES,result), sheet=sheet)
+  }
+}
+  
+compareWorkBookSDs()
