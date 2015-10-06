@@ -13,6 +13,7 @@ OverallBHSelectedFamilies<-function (jointRejects,numOfGroups){
 
 
 rejectTukey <- function (xbars,S,groupSize,qStar){
+<<<<<<< HEAD
  
 #    print ("*****AS NUMERIC CHECK*******************")
 #   print ("xbars=")
@@ -32,6 +33,10 @@ rejectTukey <- function (xbars,S,groupSize,qStar){
   
   # print (list("length"=length(b), "ix"=b))
   
+=======
+  statistics=as.numeric(dist(xbars)/sqrt(S/groupSize))
+  b<-which(statistics>=qStar)
+>>>>>>> 2008f6d3c2b875c5fd2901344f1b67eac6e8b4bc
   return (list("length"=length(b), "ix"=b))
 }
 
@@ -88,10 +93,17 @@ countFalseRejections<-function (rejects , refVec,details=FALSE){
     
   }
   if (rejects$length==0){ #if there were no rejects at all
+<<<<<<< HEAD
     print ("0 rejects")
     return (0)
   }
   
+=======
+     print ("0 rejects")
+    return (0)
+  }
+
+>>>>>>> 2008f6d3c2b875c5fd2901344f1b67eac6e8b4bc
   fr<-0 #false rejections counter
   for (i in 1:rejects$length){ # count num of false rejects
     #         print (c("len", length(refVec)))
@@ -179,7 +191,11 @@ calcSimesPVals<- function (PVals){
   #outputs the min of every row in a vector of simes pvals
   
   # print (PVals[i,])
+<<<<<<< HEAD
   
+=======
+ 
+>>>>>>> 2008f6d3c2b875c5fd2901344f1b67eac6e8b4bc
   simes=numeric(nrow(PVals))
   for (i in 1:nrow(PVals)){
     simes[i]=min(p.adjust(PVals[i,], method="BH"))
@@ -223,9 +239,13 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups, groupSize, delta
                                     groupSize,
                                     numOfGroups,
                                     details=FALSE)
+<<<<<<< HEAD
 #     print(pairwisePVals)
 #     print (refVec)
     }
+=======
+  }
+>>>>>>> 2008f6d3c2b875c5fd2901344f1b67eac6e8b4bc
   if (methodix==1 || methodix == 2){
     familiesTukeyPVals=calcTukeyPVals(xbars,S,groupSize, 
                                       numOfGroups,details=FALSE)
@@ -247,10 +267,14 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups, groupSize, delta
   
   if (methodix==3){
     #method 3 - overall BH - take joint family and reject in it using BH
+<<<<<<< HEAD
     
     #IMPORTANT: MUST transpose a matrix if we use as.numeric to create a signle vector 
     #out of it (when each row of the matrix represents a family) 
     bigFamilyRejects=Preject(method="BH", pvals=as.numeric(t(pairwisePVals)), alpha=0.05)
+=======
+    bigFamilyRejects=Preject(method="BH", pvals=as.numeric(pairwisePVals), alpha=0.05)
+>>>>>>> 2008f6d3c2b875c5fd2901344f1b67eac6e8b4bc
     SelectedFamilies<-OverallBHSelectedFamilies(bigFamilyRejects, numOfGroups)
     print ("method3 bigfamily rejects")
     print (bigFamilyRejects)
@@ -291,7 +315,11 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups, groupSize, delta
     #to an all FALSE ref vec.
     if (i>numOfSignalFamilies){
       refVec=noSignalRefVec;
+<<<<<<< HEAD
     }
+=======
+  }
+>>>>>>> 2008f6d3c2b875c5fd2901344f1b67eac6e8b4bc
     statsMatrix[SelectedFamilies$ix[i],"SELECTED"]<-TRUE;
     
     if (methodix==1 || methodix==4){
@@ -307,11 +335,16 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups, groupSize, delta
       #method B
       #print ("2")
       # reject inside the selected families with QTUKEY threshold
+<<<<<<< HEAD
      
       # print (xbars[SelectedFamilies$ix[i],])
       
       rejects<-
         rejectTukey(xbars[SelectedFamilies$ix[i],],
+=======
+      rejects<-
+        rejectTukey(xbars[SelectedFamilies$ix[i]],
+>>>>>>> 2008f6d3c2b875c5fd2901344f1b67eac6e8b4bc
                     S[SelectedFamilies$ix[i]],
                     groupSize,
                     qStar)
@@ -386,8 +419,13 @@ tukeyTestSplit<-function (n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1
     xbars<-rbind(xbars,getRandomXBars(sd=sqrt(1/groupSize),
                                       DesVector=rep(0,length(DesVector)) ))
   }
+<<<<<<< HEAD
   print ("XBARS")
   print (xbars)
+=======
+      print ("XBARS")
+      print (xbars)
+>>>>>>> 2008f6d3c2b875c5fd2901344f1b67eac6e8b4bc
   print (c("Number of Rows of Xbars:", nrow(xbars)))
   
   stats<-iteration(xbars=xbars, numOfSignalFamilies=numOfSignalFamilies, 
