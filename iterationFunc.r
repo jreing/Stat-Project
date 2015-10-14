@@ -13,27 +13,25 @@ OverallBHSelectedFamilies<-function (jointRejects,numOfGroups){
 
 
 rejectTukey <- function (xbars,S,groupSize,qStar){
- 
-#    print ("*****AS NUMERIC CHECK*******************")
-#   print ("xbars=")
-#   print (xbars)
-#   print ("S=")
-#   print (S)
-#   print ("Groupsize=")
-#   print (groupSize)
-#   print ("qstar")
-#   print (qStar)
-#   print(dist(xbars)/sqrt(S/groupSize))
-#   print (as.numeric(dist(xbars)/sqrt(S/groupSize)))
-#   
+  
+  #    print ("*****AS NUMERIC CHECK*******************")
+  #   print ("xbars=")
+  #   print (xbars)
+  #   print ("S=")
+  #   print (S)
+  #   print ("Groupsize=")
+  #   print (groupSize)
+  #   print ("qstar")
+  #   print (qStar)
+  #   print(dist(xbars)/sqrt(S/groupSize))
+  #   print (as.numeric(dist(xbars)/sqrt(S/groupSize)))
+  #   
   
   statistics=as.numeric(dist(xbars)/sqrt(S/groupSize))
   b<-which(statistics>=qStar)
   
   # print (list("length"=length(b), "ix"=b))
   
-  statistics=as.numeric(dist(xbars)/sqrt(S/groupSize))
-  b<-which(statistics>=qStar)
   return (list("length"=length(b), "ix"=b))
 }
 
@@ -90,7 +88,6 @@ countFalseRejections<-function (rejects , refVec,details=FALSE){
     
   }
   if (rejects$length==0){ #if there were no rejects at all
-
     print ("0 rejects")
     return (0)
   }
@@ -182,7 +179,7 @@ calcSimesPVals<- function (PVals){
   #outputs the min of every row in a vector of simes pvals
   
   # print (PVals[i,])
-
+  
   simes=numeric(nrow(PVals))
   for (i in 1:nrow(PVals)){
     simes[i]=min(p.adjust(PVals[i,], method="BH"))
@@ -196,10 +193,10 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups, groupSize, delta
   alpha=0.05
   #definintion of statsMatrix
   numOfFamilies=nrow(xbars);
-  statsMatrix=matrix(NA, numOfFamilies+1, 7)
-  colnames(statsMatrix)<-c("FAMILY_#","METHOD_#","SELECTED", "FDR", "FWER", "FR", "POWER")
+  statsMatrix=matrix(NA, numOfFamilies+1, 9)
+  colnames(statsMatrix)<-c("FAMILY_#","METHOD_#","SELECTED", "FAM FDR", "FAM FWER", "FR", "POWER", "AVG FDR", "AVG FWER")
   statsMatrix[1:numOfFamilies,"FAMILY_#"]=1:numOfFamilies
-  statsMatrix[numOfFamilies+1,"FAMILY_#"]=0;
+  statsMatrix[numOfFamilies+1,"FAMILY_#"]=NaN;
   statsMatrix[,"METHOD_#"]=methodix
   statsMatrix[,"SELECTED"]<-FALSE
   
@@ -226,16 +223,18 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups, groupSize, delta
                                     groupSize,
                                     numOfGroups,
                                     details=FALSE)
-
+    #     print(pairwisePVals)
+    #     print (refVec)
+  }
   if (methodix==1 || methodix == 2){
     familiesTukeyPVals=calcTukeyPVals(xbars,S,groupSize, 
                                       numOfGroups,details=FALSE)
     #         print (familiesTukeyPVals)
   }
   if (methodix==4){
-    print(pairwisePVals)
+    # print(pairwisePVals)
     familiesSimesPVals=calcSimesPVals(pairwisePVals)
-    print(familiesSimesPVals)
+    # print(familiesSimesPVals)
   }
   
   #3. select families according to desired method
@@ -248,10 +247,10 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups, groupSize, delta
   
   if (methodix==3){
     #method 3 - overall BH - take joint family and reject in it using BH
+    
     #IMPORTANT: MUST transpose a matrix if we use as.numeric to create a signle vector 
     #out of it (when each row of the matrix represents a family) 
     bigFamilyRejects=Preject(method="BH", pvals=as.numeric(t(pairwisePVals)), alpha=0.05)
-
     SelectedFamilies<-OverallBHSelectedFamilies(bigFamilyRejects, numOfGroups)
     print ("method3 bigfamily rejects")
     print (bigFamilyRejects)
@@ -271,11 +270,12 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups, groupSize, delta
                                                    size=numOfFamilies,
                                                    numOfFalseH0sInRef=numOfFamilies-numOfSignalFamilies,
                                                    details=FALSE)
-  statsMatrix[numOfFamilies+1,"FDR"]<-calcFDR(rejects=SelectedFamilies,
+  statsMatrix[numOfFamilies+1,"FAM FDR"]<-calcFDR(rejects=SelectedFamilies,
                                               falseRejections=statsMatrix[numOfFamilies+1,"FR"])
-  statsMatrix[numOfFamilies+1,"FWER"]<-calcFWER(rejects=SelectedFamilies,
+  statsMatrix[numOfFamilies+1,"FAM FWER"]<-calcFWER(rejects=SelectedFamilies,
                                                 falseRejections=statsMatrix[numOfFamilies+1,"FR"])
-  
+  statsMatrix[numOfFamilies+1,"SELECTED"]<-SelectedFamilies$length
+    
   #5. Select inside selected families according to the desired method
   #save rejects into rejects.
   
@@ -292,9 +292,7 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups, groupSize, delta
     #to an all FALSE ref vec.
     if (i>numOfSignalFamilies){
       refVec=noSignalRefVec;
-
-  }
-
+    }
     statsMatrix[SelectedFamilies$ix[i],"SELECTED"]<-TRUE;
     
     if (methodix==1 || methodix==4){
@@ -310,12 +308,11 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups, groupSize, delta
       #method B
       #print ("2")
       # reject inside the selected families with QTUKEY threshold
-
+      
       # print (xbars[SelectedFamilies$ix[i],])
       
       rejects<-
         rejectTukey(xbars[SelectedFamilies$ix[i],],
-
                     S[SelectedFamilies$ix[i]],
                     groupSize,
                     qStar)
@@ -360,11 +357,15 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups, groupSize, delta
                 choose (ncol(xbars),2),
                 length(which(refVec==FALSE)), 
                 details=FALSE)       
-    statsMatrix[SelectedFamilies$ix[i], "FDR"]=
+    statsMatrix[SelectedFamilies$ix[i], "FAM FDR"]=
       calcFDR(rejects, statsMatrix[SelectedFamilies$ix[i], "FR"])       
-    statsMatrix[SelectedFamilies$ix[i], "FWER"]=
+    statsMatrix[SelectedFamilies$ix[i], "FAM FWER"]=
       calcFWER(rejects, statsMatrix[SelectedFamilies$ix[i], "FR"]) 
   }
+  #calculate OVERALLs
+  statsMatrix[numOfFamilies+1,"AVG FDR"]=mean(statsMatrix[1:numOfFamilies,"FAM FDR"], na.rm=TRUE)
+  statsMatrix[numOfFamilies+1,"AVG FWER"]=mean(statsMatrix[1:numOfFamilies,"FAM FWER"], na.rm=TRUE)
+
   return (statsMatrix)
 }
 
@@ -390,15 +391,94 @@ tukeyTestSplit<-function (n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1
     xbars<-rbind(xbars,getRandomXBars(sd=sqrt(1/groupSize),
                                       DesVector=rep(0,length(DesVector)) ))
   }
-
   print ("XBARS")
   print (xbars)
-
   print (c("Number of Rows of Xbars:", nrow(xbars)))
   
-  stats<-iteration(xbars=xbars, numOfSignalFamilies=numOfSignalFamilies, 
-                   numOfGroups=numOfGroups, groupSize=groupSize, delta=1,methodix=methodix, DesVector=DesVector)
+  function.names = c(
+    'calcFDR', 'calcFWER', 'calcSimesPVals', 'calcPairwisePVals',
+    'calcPower',
+    'calcTukeyPVals', 'countFalseFamilyRejections', 'countFalseRejections',
+    'Preject', 'rejectTukey', 'OverallBHSelectedFamilies','SelectFamiliesBH',
+    'setRefVectorBig', 'iteration'
+  )
+  library(parallel)
+  library(doParallel)
+  library(foreach)
+  library(doRNG)
+  nr.cores=4
+  cl = makeCluster(nr.cores)
+  registerDoParallel(cl)
+  
+  
+  wrapper.res = foreach(i=1:n, .export=function.names , .packages='foreach') %dopar% {
+    
+    res = foreach(methodix=1:4, .export=function.names) %do% {
+      
+      iteration(xbars=xbars, numOfSignalFamilies=numOfSignalFamilies, 
+                numOfGroups=numOfGroups, groupSize=groupSize, delta=1,
+                methodix=methodix, DesVector=DesVector)
+      
+    }
+    res=rbind(res[[1]], res[[2]], res[[3]], res[[4]])
+  }
+  # res
+   # print(rbind(res[[1]], res[[2]], res[[3]], res[[4]]))
+
+  # return (res)
+  stopCluster(cl)
+  l=length(wrapper.res)
+  # wrapper.res=Reduce ('+',wrapper.res)/length(wrapper.res)
+  wrapper.res=Reduce ('+',wrapper.res)/length(wrapper.res)
+  print (wrapper.res[!is.na(wrapper.res[,"FAM FDR"]),]) 
+  print (wrapper.res[is.na(wrapper.res[,"FAMILY_#"]),]) 
+  
+  print (c("# of iterations:" , l))  
+  #   stats<-iteration(xbars=xbars, numOfSignalFamilies=numOfSignalFamilies, 
+  #                    numOfGroups=numOfGroups, groupSize=groupSize, delta=1,methodix=methodix, DesVector=DesVector)
   #print only rows representing families that were rejected
-  print (stats[!is.na(stats[,"FDR"]),])
+  # print (stats[!is.na(stats[,"FAM FDR"]),])
   
 }
+# 
+# tukeyTestWrapper<- function (n=5){
+#   
+#    #set up parallel jobs
+#   library(parallel)
+#   library(doParallel)
+#   library(foreach)
+#   library(doRNG)
+#   
+#   function.names = c(
+#     'calcFDR', 'calcFWER', 'calcSimesPVals', 'calcPairwisePVals',
+#     'calcPower',
+#     'calcTukeyPVals', 'countFalseFamilyRejections', 'countFalseRejections',
+#     'Preject', 'rejectTukey', 'OverallBHSelectedFamilies','SelectFamiliesBH',
+#     'setRefVectorBig', 'iteration', 'tukeyTestSplit', 'getRandomXBars'
+#   )
+#   nr.cores=4
+#   cl = makeCluster(nr.cores)
+#   registerDoParallel(cl)
+#   
+#   wrapper.res = foreach(i=1:n, .export=function.names) %dopar% {
+#     tukeyTestSplit(DesVector=c(0,0,4,4,4))
+#    
+#   }
+#   stopCluster(cl)
+#   l=length(wrapper.res)
+#   # wrapper.res=Reduce ('+',wrapper.res)/length(wrapper.res)
+#   wrapper.res=Reduce ('+',wrapper.res)/length(wrapper.res)
+#   print (wrapper.res[!is.na(wrapper.res[,"FAM FDR"]),]) 
+#   print (wrapper.res[is.na(wrapper.res[,"FAMILY_#"]),]) 
+#   
+#   print (c("# of iterations:" , l))
+#   
+#   # print (c("Iteration:", iters, "mu1:", mu, "method:", methodix))
+# #   print (c("Average FDR:", FDRSum[methodix]/SelectedFamilies[[methodix]]$length))
+# #   print (c("Overall FDR: ",  OverallFR[methodix]/OverallRejectsLength[methodix]))
+# #   print (c("Average FWER: ", FWERSum[methodix]/SelectedFamilies[[methodix]]$length))
+# #   print (c("Overall FR: ", OverallFR[methodix]))
+# #   print (c("Interesting Families () are",SelectedFamilies[[methodix]]))
+# #   
+#   
+# }
