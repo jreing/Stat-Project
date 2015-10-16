@@ -377,27 +377,18 @@ tukeyTestSplit<-function (n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1
   print ("Num Of Entered Groups:")
   print(numOfGroups)
   
-  #first numOfSignalFamilies with signal
-  xbars<-NULL
-  #we get random XBars using sd equals to sqrt(1/groupSize) for the signal 
-  #families
+  #initilaize timer
+  ptm<-proc.time()
   
-  for (i in 1:numOfSignalFamilies){
-    xbars<-rbind(xbars,getRandomXBars(sd=sqrt(1/groupSize),
-                                      DesVector=DesVector))
-  }
-  #no signal families
-  for (i in 1:(numOfFamilies-numOfSignalFamilies)){
-    xbars<-rbind(xbars,getRandomXBars(sd=sqrt(1/groupSize),
-                                      DesVector=rep(0,length(DesVector)) ))
-  }
-  print ("XBARS")
-  print (xbars)
-  print (c("Number of Rows of Xbars:", nrow(xbars)))
+  
+
+#   print ("XBARS")
+#   print (xbars)
+#   print (c("Number of Rows of Xbars:", nrow(xbars)))
   
   function.names = c(
     'calcFDR', 'calcFWER', 'calcSimesPVals', 'calcPairwisePVals',
-    'calcPower',
+    'calcPower','getRandomXBars',
     'calcTukeyPVals', 'countFalseFamilyRejections', 'countFalseRejections',
     'Preject', 'rejectTukey', 'OverallBHSelectedFamilies','SelectFamiliesBH',
     'setRefVectorBig', 'iteration'
@@ -412,7 +403,20 @@ tukeyTestSplit<-function (n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1
   
   
   wrapper.res = foreach(i=1:n, .export=function.names , .packages='foreach') %dopar% {
+    #first numOfSignalFamilies with signal
+    xbars<-NULL
+    #we get random XBars using sd equals to sqrt(1/groupSize) for the signal 
+    #families
     
+    for (i in 1:numOfSignalFamilies){
+      xbars<-rbind(xbars,getRandomXBars(sd=sqrt(1/groupSize),
+                                        DesVector=DesVector))
+    }
+    #no signal families
+    for (i in 1:(numOfFamilies-numOfSignalFamilies)){
+      xbars<-rbind(xbars,getRandomXBars(sd=sqrt(1/groupSize),
+                                        DesVector=rep(0,length(DesVector)) ))
+    }
     res = foreach(methodix=1:4, .export=function.names) %do% {
       
       iteration(xbars=xbars, numOfSignalFamilies=numOfSignalFamilies, 
@@ -428,10 +432,18 @@ tukeyTestSplit<-function (n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1
   # return (res)
   stopCluster(cl)
   l=length(wrapper.res)
-  # wrapper.res=Reduce ('+',wrapper.res)/length(wrapper.res)
-  wrapper.res=Reduce ('+',wrapper.res)/length(wrapper.res)
+  wrapper.res2=apply(simplify2array(wrapper.res), 1:2, mean)
+  wrapper.res2sd=apply(simplify2array(wrapper.res), 1:2, sd)
+  
+  # readline()
+  wrapper.res=Reduce ('+',wrapper.res) /length(wrapper.res)
+  
   print (wrapper.res[!is.na(wrapper.res[,"FAM FDR"]),]) 
+  print (wrapper.res2[!is.na(wrapper.res[,"FAM FDR"]),]) 
+  
   print (wrapper.res[is.na(wrapper.res[,"FAMILY_#"]),]) 
+  print (wrapper.res2[is.na(wrapper.res[,"FAMILY_#"]),]) 
+  print (wrapper.res2sd[is.na(wrapper.res[,"FAMILY_#"]),]) 
   
   print (c("# of iterations:" , l))  
   #   stats<-iteration(xbars=xbars, numOfSignalFamilies=numOfSignalFamilies, 
@@ -439,46 +451,12 @@ tukeyTestSplit<-function (n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1
   #print only rows representing families that were rejected
   # print (stats[!is.na(stats[,"FAM FDR"]),])
   
+  #stop timer
+  totalTime= (proc.time()-ptm)[3]
+  
+  totalTime=paste(totalTime,collapse="")
+  totalTime=strtrim(totalTime,6)
+  print(strtrim(totalTime,6))
+  
+  
 }
-# 
-# tukeyTestWrapper<- function (n=5){
-#   
-#    #set up parallel jobs
-#   library(parallel)
-#   library(doParallel)
-#   library(foreach)
-#   library(doRNG)
-#   
-#   function.names = c(
-#     'calcFDR', 'calcFWER', 'calcSimesPVals', 'calcPairwisePVals',
-#     'calcPower',
-#     'calcTukeyPVals', 'countFalseFamilyRejections', 'countFalseRejections',
-#     'Preject', 'rejectTukey', 'OverallBHSelectedFamilies','SelectFamiliesBH',
-#     'setRefVectorBig', 'iteration', 'tukeyTestSplit', 'getRandomXBars'
-#   )
-#   nr.cores=4
-#   cl = makeCluster(nr.cores)
-#   registerDoParallel(cl)
-#   
-#   wrapper.res = foreach(i=1:n, .export=function.names) %dopar% {
-#     tukeyTestSplit(DesVector=c(0,0,4,4,4))
-#    
-#   }
-#   stopCluster(cl)
-#   l=length(wrapper.res)
-#   # wrapper.res=Reduce ('+',wrapper.res)/length(wrapper.res)
-#   wrapper.res=Reduce ('+',wrapper.res)/length(wrapper.res)
-#   print (wrapper.res[!is.na(wrapper.res[,"FAM FDR"]),]) 
-#   print (wrapper.res[is.na(wrapper.res[,"FAMILY_#"]),]) 
-#   
-#   print (c("# of iterations:" , l))
-#   
-#   # print (c("Iteration:", iters, "mu1:", mu, "method:", methodix))
-# #   print (c("Average FDR:", FDRSum[methodix]/SelectedFamilies[[methodix]]$length))
-# #   print (c("Overall FDR: ",  OverallFR[methodix]/OverallRejectsLength[methodix]))
-# #   print (c("Average FWER: ", FWERSum[methodix]/SelectedFamilies[[methodix]]$length))
-# #   print (c("Overall FR: ", OverallFR[methodix]))
-# #   print (c("Interesting Families () are",SelectedFamilies[[methodix]]))
-# #   
-#   
-# }

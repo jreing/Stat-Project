@@ -1,3 +1,5 @@
+library ('XLConnect')
+
 iteration <- setClass ("iteration",
                        #Data structure that holds data regarding a certain iteration (=manipulation of random numbers)        
                        slots=c(xbars="numeric",
@@ -860,7 +862,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
       "TukeyTest MEANS",
       format(Sys.time(), "%d%m%y-%H-%M"),
       "DesVector=",  vecString, 
-      "TotalTime:", totalTime,
+      # "TotalTime:", totalTime,
       "n=",n,".xls"),
     create = TRUE)
 #   readline()
@@ -893,7 +895,7 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
   wb<-loadWorkbook(
     filename=paste("TukeyTest sd",format(Sys.time(), "%d%m%y-%H-%M"),
                    "DesVector=",  vecString, 
-                   "TotalTime:", totalTime,
+                   # "TotalTime:", totalTime,
                    "n=",n,".xls"),
     create = TRUE)
 
@@ -920,43 +922,49 @@ tukeyTest2 <-function(n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1, nu
   writeWorksheet(wb, cbind(METHOD_NAMES,OvrFWERSD), sheet = "FAMILY FWER")
   
   saveWorkbook(wb)
-  
+  print ("finished")
   
   #   print(PowerOutput)
 }
 
 
 
+tukeyTest2(n=10000,numOfSignalFamilies=5, numOfFamilies=40,interval=0.5, mindelta=1, maxdelta=1
+                           ,DesVector=c(0,0,0,4,4), details=FALSE)
+
+
 #tukeyTest2(n=100)
-# tukeyTest2(n=50, numOfGroups=5,numOfTrues=1, interval=0.5, mindelta=0, maxdelta=4,details=FALSE)
+ # tukeyTest2(n=1, numOfGroups=5,numOfTrues=1, interval=0.5, mindelta=0, maxdelta=4,details=FALSE)
+# 
 
-N=10000
 
-#Series Of Tests:
-for (m1 in c(10,50,100,1000)){
-  for (m in c(1000,10000)){
-    tukeyTest2(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
-               ,DesVector=c(0,0,1), details=FALSE)
-    tukeyTest2(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
-               ,DesVector=c(-1,0,1), details=FALSE)
-    tukeyTest2(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
-               ,DesVector=c(-1,0,1,2), details=FALSE)
-    tukeyTest2(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
-               ,DesVector=c(-1,0,0,1), details=FALSE)
-    tukeyTest2(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
-               ,DesVector=c(-1,-1,-1,1,1,1), details=FALSE)
-    tukeyTest2(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
-               ,DesVector=c(-1,-1,0,0,1,1), details=FALSE)
-    tukeyTest2(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
-               ,DesVector=c(-2,-1,0,0,1,2), details=FALSE)
-    tukeyTest2(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
-               ,DesVector=c(-1,-1,-1,-1,-1,1,1,1,1,1), details=FALSE)
-    tukeyTest2(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
-              ,DesVector=c(-2,-2,-1,-1,0,0,1,1,2,2), details=FALSE)
-    tukeyTest2(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
-               ,DesVector=c(-3,-2,-1,0,0,0,0,1,2,3), details=FALSE)
-  }
-}
+# N=10000
+# 
+# #Series Of Tests:
+# for (m1 in c(10,50,100,1000)){
+#   for (m in c(1000,10000)){
+#     tukeyTest2(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+#                ,DesVector=c(0,0,1), details=FALSE)
+#     tukeyTest2(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+#                ,DesVector=c(-1,0,1), details=FALSE)
+#     tukeyTest2(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+#                ,DesVector=c(-1,0,1,2), details=FALSE)
+#     tukeyTest2(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+#                ,DesVector=c(-1,0,0,1), details=FALSE)
+#     tukeyTest2(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+#                ,DesVector=c(-1,-1,-1,1,1,1), details=FALSE)
+#     tukeyTest2(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+#                ,DesVector=c(-1,-1,0,0,1,1), details=FALSE)
+#     tukeyTest2(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+#                ,DesVector=c(-2,-1,0,0,1,2), details=FALSE)
+#     tukeyTest2(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+#                ,DesVector=c(-1,-1,-1,-1,-1,1,1,1,1,1), details=FALSE)
+#     tukeyTest2(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+#               ,DesVector=c(-2,-2,-1,-1,0,0,1,1,2,2), details=FALSE)
+#     tukeyTest2(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+#                ,DesVector=c(-3,-2,-1,0,0,0,0,1,2,3), details=FALSE)
+#   }
+# }
 # 
 # compareWorkBookSDs<- function (name1="TukeyTest sd 161114-14-38 numOfGroups= 5 n= 50.xls" ,
 #                                name2="TukeyTest sd 161114-14-37 numOfGroups= 5 n= 50.xls"){
