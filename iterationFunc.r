@@ -11,7 +11,6 @@ OverallBHSelectedFamilies<-function (jointRejects,numOfGroups){
   
 }
 
-
 rejectTukey <- function (xbars,S,groupSize,qStar){
   
   #    print ("*****AS NUMERIC CHECK*******************")
@@ -178,12 +177,15 @@ calcSimesPVals<- function (PVals){
   #gets a matrix of pairwise-pvals as input
   #outputs the min of every row in a vector of simes pvals
   
-  # print (PVals[i,])
+ 
   
   simes=numeric(nrow(PVals))
   for (i in 1:nrow(PVals)){
+    # print (PVals[i,])
+    # readline()
     simes[i]=min(p.adjust(PVals[i,], method="BH"))
   }
+  
   return (simes)
   
 }
@@ -231,9 +233,12 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups, groupSize, delta
   
   #start methodix loop
   for (methodix in startix:endix){
+    #init 2nd Phase reject counter
+    Overall2ndPhaseRejects=0;
+    
     #definItion of statsMatrix
-    statsMatrix=matrix(NA, numOfFamilies+1, 9)
-    colnames(statsMatrix)<-c("FAMILY_#","METHOD_#","SELECTED", "FAM FDR", "FAM FWER", "FR", "POWER", "AVG FDR", "AVG FWER")
+    statsMatrix=matrix(NA, numOfFamilies+1, 12)
+    colnames(statsMatrix)<-c("FAMILY_#","METHOD_#","SELECTED", "FAM FDR", "FAM FWER", "FR", "POWER", "AVG FDR", "AVG FWER","OVR FR", "OVR FDR", "OVR FWER")
     statsMatrix[1:numOfFamilies,"FAMILY_#"]=1:numOfFamilies
     statsMatrix[numOfFamilies+1,"FAMILY_#"]=NaN;
     statsMatrix[,"METHOD_#"]=methodix
@@ -248,7 +253,7 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups, groupSize, delta
                                            numOfGroups,
                                            details=FALSE)
       }
-      #     print(pairwisePVals)
+           print(pairwisePVals)
       #     print (refVec)
     }
     if (methodix==1 || methodix == 2){
@@ -262,7 +267,9 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups, groupSize, delta
     if (methodix==4){
       # print(pairwisePVals)
       familiesSimesPVals=calcSimesPVals(pairwisePVals)
-      # print(familiesSimesPVals)
+      print(familiesSimesPVals)
+      # readline()
+      
     }
     
     #3. select families according to desired method
@@ -316,6 +323,7 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups, groupSize, delta
       qStar=qtukey(p=1-alpha*SelectedFamilies$length/numOfFamilies,
                    nmeans=numOfGroups,df=df)
     }
+  
     for (i in 1:(SelectedFamilies$length)){ #run thru selected families
       #update matrix to indicate this family has been rejected
       #print (SelectedFamilies$ix)
@@ -333,7 +341,7 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups, groupSize, delta
         
         # reject inside the selected families with BH alpha=0.05*r/m
         
-        rejects<- Preject(method="BH", pvals=pairwisePVals[SelectedFamilies$ix[i],], 
+        Level2Rejects<- Preject(method="BH", pvals=pairwisePVals[SelectedFamilies$ix[i],], 
                           alpha=alpha*SelectedFamilies$length/numOfFamilies)
       }
       if (methodix==2){
@@ -343,7 +351,7 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups, groupSize, delta
         
         # print (xbars[SelectedFamilies$ix[i],])
         
-        rejects<-
+        Level2Rejects<-
           rejectTukey(xbars[SelectedFamilies$ix[i],],
                       S[SelectedFamilies$ix[i]],
                       groupSize,
@@ -373,30 +381,42 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups, groupSize, delta
         #                             print ("Method 3 rejects")
         #                                           print (m3rejects)
         #               
-        
-        rejects<-list("length"=length(m3rejects), "ix"=m3rejects)       
+        Level2Rejects<-list("length"=length(m3rejects), "ix"=m3rejects)       
       }
       
       
       #calc frs,power,fdr,fwer for the ith selectedfamily
       
       statsMatrix[SelectedFamilies$ix[i], "FR"]=
-        countFalseRejections(rejects=rejects, refVec=refVec,details=FALSE)
-      # print ("fr finished")
+        countFalseRejections(rejects=Level2Rejects, refVec=refVec,details=FALSE)
       statsMatrix[SelectedFamilies$ix[i], "POWER"]=
-        calcPower(rejects$length,
+        calcPower(Level2Rejects$length,
                   statsMatrix[SelectedFamilies$ix[i], "FR"], 
                   choose (ncol(xbars),2),
                   length(which(refVec==FALSE)), 
                   details=FALSE)       
       statsMatrix[SelectedFamilies$ix[i], "FAM FDR"]=
-        calcFDR(rejects, statsMatrix[SelectedFamilies$ix[i], "FR"])       
+        calcFDR(Level2Rejects, statsMatrix[SelectedFamilies$ix[i], "FR"])       
       statsMatrix[SelectedFamilies$ix[i], "FAM FWER"]=
-        calcFWER(rejects, statsMatrix[SelectedFamilies$ix[i], "FR"]) 
+        calcFWER(Level2Rejects, statsMatrix[SelectedFamilies$ix[i], "FR"]) 
+      
+      Overall2ndPhaseRejects=Overall2ndPhaseRejects+Level2Rejects$length
+ 
     }
-    #calculate OVERALLs
+    #calculate AVGs
     statsMatrix[numOfFamilies+1,"AVG FDR"]=mean(statsMatrix[1:numOfFamilies,"FAM FDR"], na.rm=TRUE)
     statsMatrix[numOfFamilies+1,"AVG FWER"]=mean(statsMatrix[1:numOfFamilies,"FAM FWER"], na.rm=TRUE)
+    statsMatrix[numOfFamilies+1,"OVR FR"]=sum(statsMatrix[1:numOfFamilies,"FR"], na.rm=TRUE)
+    statsMatrix[numOfFamilies+1,"OVR FDR"]=calcFDR(rejects=list("length"=Overall2ndPhaseRejects, "ix"=NULL),
+      falseRejections= statsMatrix[numOfFamilies+1,"OVR FR"])
+    statsMatrix[numOfFamilies+1,"OVR FWER"]=
+            calcFWER(rejects= list ("length"=Overall2ndPhaseRejects, "ix"=NULL),
+                       falseRejections = statsMatrix[numOfFamilies+1,"OVR FR"] )
+      
+    if (SelectedFamilies$length==0){
+      statsMatrix[numOfFamilies+1,"AVG FDR"]=0
+      statsMatrix[numOfFamilies+1,"AVG FWER"]=0
+    }
     # print("this is statsMatrix:")
     # print(statsMatrix)
     res[[methodix]]=statsMatrix;
@@ -466,9 +486,12 @@ tukeyTestSplit<-function (n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1
  
  
   l=length(wrapper.res)
+  print ("means:")
   wrapper.res2=apply(simplify2array(wrapper.res), 1:2, mean)
-  wrapper.res2sd=apply(simplify2array(wrapper.res), 1:2, sd)
-  
+  print ("sds:")
+  wrapper.res2sd=apply(simplify2array(wrapper.res), 1:2, sd)/sqrt(l)
+#   print ("simplift2array")
+#     print (simplify2array(wrapper.res))
   # readline()
   # wrapper.res=Reduce ('+',wrapper.res) /length(wrapper.res)
   
@@ -491,6 +514,6 @@ tukeyTestSplit<-function (n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1
   totalTime=paste(totalTime,collapse="")
   totalTime=strtrim(totalTime,6)
   print(strtrim(totalTime,6))
-  
+  # write.csv(simplify2array(wrapper.res),"output.csv")
   
 }
