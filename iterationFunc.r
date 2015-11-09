@@ -209,14 +209,7 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups, groupSize, delta
     res=list(NULL,NULL,NULL,NULL);
     numOfFamilies=nrow(xbars);
     
-    
-    #make refernce vector
-    refVec=setRefVectorBig(
-        size=numOfGroups,
-        numOfZeros=numOfGroups-numOfTrues,
-        mu=delta,
-        DesVector=DesVector,
-        details=FALSE)
+   
     noSignalRefVec=rep(FALSE,choose(numOfGroups,2))
     
     #definition of constants df and S
@@ -233,6 +226,15 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups, groupSize, delta
     
     #start methodix loop
     for (methodix in startix:endix){
+        
+        #make refernce vector
+        refVec=setRefVectorBig(
+            size=numOfGroups,
+            numOfZeros=numOfGroups-numOfTrues,
+            mu=delta,
+            DesVector=DesVector,
+            details=FALSE)
+        
         #init 2nd Phase reject counter
         Overall2ndPhaseRejects=0;
         
@@ -388,7 +390,7 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups, groupSize, delta
             #calc frs,power,fdr,fwer for the ith selectedfamily
             
             statsMatrix[SelectedFamilies$ix[i], "FR"]=
-                countFalseRejections(rejects=Level2Rejects, refVec=refVec,details=FALSE)
+                countFalseRejections(rejects=Level2Rejects, refVec=refVec,details=TRUE)
             statsMatrix[SelectedFamilies$ix[i], "POWER"]=
                 calcPower(Level2Rejects$length,
                           statsMatrix[SelectedFamilies$ix[i], "FR"], 
@@ -464,7 +466,7 @@ tukeyTestSplit<-function (n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1
     registerDoParallel(cl)
     
     
-    wrapper.res = foreach(i=1:n, .export=function.names , .packages='foreach') %dopar% {
+    wrapper.res = foreach(i=1:n, .export=function.names , .packages='foreach') %do% {
         #first numOfSignalFamilies with signal
         xbars<-NULL
         #we get random XBars using sd equals to sqrt(1/groupSize) for the signal 
@@ -503,7 +505,9 @@ tukeyTestSplit<-function (n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1
     print (wrapper.res2[!is.na(wrapper.res2[,"FAM FDR"]),]) 
     
     # print (wrapper.res[is.na(wrapper.res[,"FAMILY_#"]),]) 
-    print (wrapper.res2[is.na(wrapper.res2[,"FAMILY_#"]),]) 
+    # print (wrapper.res2[is.na(wrapper.res2[,"FAMILY_#"]),]) 
+    # print (subset(wrapper.res2, "METHOD_#"=4)) 
+    
     print (wrapper.res2sd[is.na(wrapper.res2[,"FAMILY_#"]),]) 
     
     print (c("# of iterations:" , l))  
