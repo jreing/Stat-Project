@@ -238,6 +238,13 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups, groupSize, delta
         #init 2nd Phase reject counter
         Overall2ndPhaseRejects=0;
         
+        #init OverallNumOfFalseH0s (for OVR POWER calculation)
+        OverallNumOfFalseH0s=numOfSignalFamilies*length(which(refVec==FALSE))+
+            (numOfFamilies-numOfSignalFamilies)*choose (ncol(xbars),2)
+
+        #         print (OverallNumOfFalseH0s)
+        #         readline()
+         
         #definItion of statsMatrix
         statsMatrix=matrix(NA, numOfFamilies+1, 13)
         colnames(statsMatrix)<-c("FAMILY_#","METHOD_#","SELECTED", "FAM FDR", "FAM FWER", "FR", "POWER", "AVG FDR", "AVG FWER","OVR FR", "OVR POWER", "OVR FDR", "OVR FWER")
@@ -246,6 +253,7 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups, groupSize, delta
         statsMatrix[,"METHOD_#"]=methodix
         statsMatrix[,"SELECTED"]<-FALSE
         # print(statsMatrix)
+        
         #2. create PVals accordign to the desired method
         if (methodix==1 || methodix == 3 || methodix == 4){
             if (is.null(pairwisePVals)){
@@ -414,11 +422,18 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups, groupSize, delta
         statsMatrix[numOfFamilies+1,"OVR FWER"]=
             calcFWER(rejects= list ("length"=Overall2ndPhaseRejects, "ix"=NULL),
                      falseRejections = statsMatrix[numOfFamilies+1,"OVR FR"] )
+        
+        
+        print (c("Overall2ndPhaseRejects",Overall2ndPhaseRejects, "OVR FR", statsMatrix[numOfFamilies+1,"OVR FR"],
+                 "size " , choose (ncol(xbars),2)*numOfFamilies, 
+                 "numOfFalseH0sInRef", OverallNumOfFalseH0s))
+        readline()
+        
         statsMatrix[numOfFamilies+1,"OVR POWER"]=
             calcPower(rejectsLength = Overall2ndPhaseRejects, 
                       falseRejections = statsMatrix[numOfFamilies+1,"OVR FR"],
                       size = choose (ncol(xbars),2)*numOfFamilies,
-                      numOfFalseH0sInRef = length(which(refVec==FALSE))*numOfFamilies)
+                      numOfFalseH0sInRef = OverallNumOfFalseH0s)
         if (SelectedFamilies$length==0){
             statsMatrix[numOfFamilies+1,"AVG FDR"]=0
             statsMatrix[numOfFamilies+1,"AVG FWER"]=0
@@ -444,8 +459,6 @@ tukeyTestSplit<-function (n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1
     #initilaize timer
     ptm<-proc.time()
     
-    
-    
     #   print ("XBARS")
     #   print (xbars)
     #   print (c("Number of Rows of Xbars:", nrow(xbars)))
@@ -461,12 +474,12 @@ tukeyTestSplit<-function (n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1
     library(doParallel)
     library(foreach)
     library(doRNG)
-    nr.cores=4
+    nr.cores=8
     cl = makeCluster(nr.cores)
     registerDoParallel(cl)
     
     
-    wrapper.res = foreach(i=1:n, .export=function.names , .packages='foreach') %do% {
+    wrapper.res = foreach(j=1:n, .export=function.names , .packages='foreach') %do% {
         #first numOfSignalFamilies with signal
         xbars<-NULL
         #we get random XBars using sd equals to sqrt(1/groupSize) for the signal 
@@ -503,6 +516,7 @@ tukeyTestSplit<-function (n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1
     
     # print (wrapper.res[!is.na(wrapper.res[,"FAM FDR"]),]) 
     print (wrapper.res2[!is.na(wrapper.res2[,"FAM FDR"]),]) 
+    print (wrapper.res2[is.na(wrapper.res2[,"FAMILY_#"]),]) 
     
     # print (wrapper.res[is.na(wrapper.res[,"FAMILY_#"]),]) 
     # print (wrapper.res2[is.na(wrapper.res2[,"FAMILY_#"]),]) 
