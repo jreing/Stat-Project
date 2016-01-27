@@ -177,8 +177,6 @@ calcSimesPVals<- function (PVals){
     #gets a matrix of pairwise-pvals as input
     #outputs the min of every row in a vector of simes pvals
     
-    
-    
     simes=numeric(nrow(PVals))
     for (i in 1:nrow(PVals)){
         # print (PVals[i,])
@@ -427,7 +425,7 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups, groupSize, delta
         print (c("Overall2ndPhaseRejects",Overall2ndPhaseRejects, "OVR FR", statsMatrix[numOfFamilies+1,"OVR FR"],
                  "size " , choose (ncol(xbars),2)*numOfFamilies, 
                  "numOfFalseH0sInRef", OverallNumOfFalseH0s))
-        readline()
+        # readline()
         
         statsMatrix[numOfFamilies+1,"OVR POWER"]=
             calcPower(rejectsLength = Overall2ndPhaseRejects, 
@@ -470,18 +468,20 @@ tukeyTestSplit<-function (n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1
         'Preject', 'rejectTukey', 'OverallBHSelectedFamilies','SelectFamiliesBH',
         'setRefVectorBig', 'iteration'
     )
+
     library(parallel)
     library(doParallel)
     library(foreach)
     library(doRNG)
-    nr.cores=8
+    nr.cores=4
     cl = makeCluster(nr.cores)
     registerDoParallel(cl)
     
-    
-    wrapper.res = foreach(j=1:n, .export=function.names , .packages='foreach') %do% {
+    ##parallellized loop to gain all xbars to be used in simulation 
+    random.res = foreach(j=1:n , .export=function.names , .packages='foreach') %dopar% {
         #first numOfSignalFamilies with signal
         xbars<-NULL
+        
         #we get random XBars using sd equals to sqrt(1/groupSize) for the signal 
         #families
         
@@ -494,36 +494,41 @@ tukeyTestSplit<-function (n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1
             xbars<-rbind(xbars,getRandomXBars(sd=sqrt(1/groupSize),
                                               DesVector=rep(0,length(DesVector)) ))
         }
+        res=xbars;
         
-        res=iteration(xbars=xbars, numOfSignalFamilies=numOfSignalFamilies, 
-                      numOfGroups=numOfGroups, groupSize=groupSize, delta=1,
-                      methodix=NULL, DesVector=DesVector)
+    }
+    # print (random.res)
+    
+    ##parallelized loop to iterate thru deltas and run the iters on each delta 
+    ## and each xbar vector
+    
+    for (delta in seq(0,3,0.5)){
+        print ("current Design Vector:")
+        print (DesVector*delta)
+        wrapper.res = foreach(j=1:n , .export=function.names , .packages='foreach') %dopar% {
+            
+            res=iteration(xbars=random.res[[j]], numOfSignalFamilies=numOfSignalFamilies, 
+                          numOfGroups=numOfGroups, groupSize=groupSize, delta=delta,
+                          methodix=NULL, DesVector=DesVector)
+            
+        }
+        
+        # print (wrapper.res)
+        
+        #wrapping it up together into means and SDs
+        l=length(wrapper.res)
+        print ("means:")
+        wrapper.res2=apply(simplify2array(wrapper.res), 1:2, mean)
+        print ("sds:")
+        wrapper.res2sd=apply(simplify2array(wrapper.res), 1:2, sd)/sqrt(l)
+        
+        #GOOD OUTPUT:
+        print (wrapper.res2[!is.na(wrapper.res2[,"FAM FDR"]),]) 
+        print (wrapper.res2[is.na(wrapper.res2[,"FAMILY_#"]),]) 
+        print (wrapper.res2sd[is.na(wrapper.res2[,"FAMILY_#"]),]) 
         
     }
     stopCluster(cl)
-    # print(wrapper.res)
-    
-    
-    l=length(wrapper.res)
-    print ("means:")
-    wrapper.res2=apply(simplify2array(wrapper.res), 1:2, mean)
-    print ("sds:")
-    wrapper.res2sd=apply(simplify2array(wrapper.res), 1:2, sd)/sqrt(l)
-    #   print ("simplift2array")
-    #     print (simplify2array(wrapper.res))
-    # readline()
-    # wrapper.res=Reduce ('+',wrapper.res) /length(wrapper.res)
-    
-    # print (wrapper.res[!is.na(wrapper.res[,"FAM FDR"]),]) 
-    print (wrapper.res2[!is.na(wrapper.res2[,"FAM FDR"]),]) 
-    print (wrapper.res2[is.na(wrapper.res2[,"FAMILY_#"]),]) 
-    
-    # print (wrapper.res[is.na(wrapper.res[,"FAMILY_#"]),]) 
-    # print (wrapper.res2[is.na(wrapper.res2[,"FAMILY_#"]),]) 
-    # print (subset(wrapper.res2, "METHOD_#"=4)) 
-    
-    print (wrapper.res2sd[is.na(wrapper.res2[,"FAMILY_#"]),]) 
-    
     print (c("# of iterations:" , l))  
     #   stats<-iteration(xbars=xbars, numOfSignalFamilies=numOfSignalFamilies, 
     #                    numOfGroups=numOfGroups, groupSize=groupSize, delta=1,methodix=methodix, DesVector=DesVector)
