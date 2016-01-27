@@ -473,6 +473,7 @@ tukeyTestSplit<-function (n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1
     library(doParallel)
     library(foreach)
     library(doRNG)
+    library(XLConnect)
     nr.cores=4
     cl = makeCluster(nr.cores)
     registerDoParallel(cl)
@@ -501,6 +502,7 @@ tukeyTestSplit<-function (n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1
     
     ##parallelized loop to iterate thru deltas and run the iters on each delta 
     ## and each xbar vector
+    wb<-loadWorkbook(paste("TukeyTest "," n=",n,".xls"), create = TRUE)
     
     for (delta in seq(0,3,0.5)){
         print ("current Design Vector:")
@@ -527,8 +529,17 @@ tukeyTestSplit<-function (n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1
         print (wrapper.res2[is.na(wrapper.res2[,"FAMILY_#"]),]) 
         print (wrapper.res2sd[is.na(wrapper.res2[,"FAMILY_#"]),]) 
         
+        #EXPORT CURRENT RESULT TO EXCEL:
+        
+        createSheet(wb, name = paste("MEANS", delta))
+        writeWorksheet(wb, round(wrapper.res2[is.na(wrapper.res2[,"FAMILY_#"]),],5), sheet =  paste("MEANS", delta))
+        createSheet(wb, name =  paste("SD", delta))
+        writeWorksheet(wb, round(wrapper.res2sd[is.na(wrapper.res2[,"FAMILY_#"]),],5), sheet =  paste("SD", delta))
+        
+        
     }
     stopCluster(cl)
+    saveWorkbook(wb)
     print (c("# of iterations:" , l))  
     #   stats<-iteration(xbars=xbars, numOfSignalFamilies=numOfSignalFamilies, 
     #                    numOfGroups=numOfGroups, groupSize=groupSize, delta=1,methodix=methodix, DesVector=DesVector)
