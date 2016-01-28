@@ -224,7 +224,7 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups,
         xbars[i,]=(delta*DesVector)+xbars[i,] 
     }
     print(xbars)
-    readline()
+    # readline()
     
     #start methodix loop
     for (methodix in startix:endix){
