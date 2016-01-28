@@ -1,33 +1,34 @@
-TukeyGraphs<- function (name="TukeyTest  270116-20-49 DesVector= -1,0,1 n= 10000 .xls")
-    wb1<- loadWorkbook(name1)
+TukeyGraphs<- function (name="TukeyTest  280116-14-14 DesVector= 0,0,1,1,1 n= 10000 .xls"){
+    wb1<- loadWorkbook(name)
     sheets <- getSheets(wb1)
     print (sheets)
     METHOD_NAMES=rbind("QTukey Stat", "Pairwise", "Overall BH", "BH BH(Simes)")
     mindelta=0
     maxdelta=4
     interval=0.5
-    i=0
+    DATA<-NULL
+    arrangedData<-NULL
     
-    for (sheet in sheets){
-        DATA[i]<-readWorksheetFromFile(name1,
-                                      sheet = sheet, 
-                                      startRow = 1, endRow = 5,
-                                      startCol = 2, endCol = 13)
-    
-        DATA[i]= matrix(as.numeric(unlist(DATA_1)),ncol=12, byrow = TRUE)
-        i=i+1
-    }
-    # COL_NAMES= get colnames
-    
+    DATA<-readWorksheetFromFile(name,
+                  sheet = sheets, 
+                  startRow = 1, endRow = 5,
+                  startCol = 2, endCol = 13)
+    # print(sheets[1])
+    COL_NAMES= colnames(DATA[[sheets[1]]])
+    # print (DATA[sheets[1]])
+    print (length(sheets)/2)
     for (col_name in COL_NAMES){
-        arrangedData[[col_name]]=matrix(NA, 4, length(COL_NAMES))
-        colnames(arrangedData[[col_name]])=sheets
+        arrangedData[[col_name]]=matrix(NaN, 4, length(sheets)/2)
+        colnames(arrangedData[[col_name]])<-seq(mindelta,maxdelta,interval)
+        rownames(arrangedData[[col_name]])<-METHOD_NAMES
+        for (delta in seq(mindelta,maxdelta,interval)){
+           arrangedData[[col_name]][,(delta+0.5)*2]<- 
+               DATA[[paste("MEANS",delta)]][,col_name]
+        }
+            
+#         
     }
-    print(arranged)
-    
-        print (sheet)
-        print (name)
-        print (DATA)
+    print (arrangedData)
       
-    }
+ 
 }
