@@ -223,7 +223,7 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups,
     for(i in 1:numOfSignalFamilies){
         xbars[i,]=(delta*DesVector)+xbars[i,] 
     }
-    print(xbars)
+    # print(xbars)
     # readline()
     
     #start methodix loop
@@ -516,7 +516,7 @@ tukeyTestSplit<-function (n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1
     for (delta in seq(mindelta,maxdelta,interval)){
         print ("current Design Vector:")
         print (DesVector*delta)
-        wrapper.res = foreach(j=1:n , .export=function.names , .packages='foreach') %do% {
+        wrapper.res = foreach(j=1:n , .export=function.names , .packages='foreach') %dopar% {
             
             res=iteration(xbars=random.res[[j]], numOfSignalFamilies=numOfSignalFamilies, 
                           numOfGroups=numOfGroups, groupSize=groupSize, delta=delta,
@@ -573,6 +573,7 @@ for (m1 in c(10,50,100,1000)){
   for (m in c(1000,10000)){
     tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
                ,DesVector=c(0,0,1), details=FALSE)
+      gc()
 #     tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
 #                ,DesVector=c(-1,0,1), details=FALSE)
 #     tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
