@@ -189,9 +189,10 @@ calcSimesPVals<- function (PVals){
 }
 
 
-iteration <-function  (xbars, numOfSignalFamilies, numOfGroups, groupSize, delta,methodix, DesVector){
+iteration <-function  (xbars, numOfSignalFamilies, numOfGroups,
+                       groupSize, delta,methodix, DesVector){
     alpha=0.05
-    # print(xbars)
+   
     
     if (is.null(methodix)){
         startix=1
@@ -206,7 +207,6 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups, groupSize, delta
     #definItion of res
     res=list(NULL,NULL,NULL,NULL);
     numOfFamilies=nrow(xbars);
-    
    
     noSignalRefVec=rep(FALSE,choose(numOfGroups,2))
     
@@ -219,8 +219,12 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups, groupSize, delta
     familiesTukeyPVals<-NULL
     SelectedFamilies<-NULL
     
-    #1. multiply xbars by delta
-    xbars=delta*xbars
+    #1. multiply xbars of signal families by delta
+    for(i in 1:numOfSignalFamilies){
+        xbars[i,]=(delta*DesVector)+xbars[i,] 
+    }
+    print(xbars)
+    readline()
     
     #start methodix loop
     for (methodix in startix:endix){
@@ -240,9 +244,6 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups, groupSize, delta
         OverallNumOfFalseH0s=numOfSignalFamilies*length(which(refVec==FALSE))+
             (numOfFamilies-numOfSignalFamilies)*choose (ncol(xbars),2)
 
-        #         print (OverallNumOfFalseH0s)
-        #         readline()
-         
         #definItion of statsMatrix
         statsMatrix=matrix(NA, numOfFamilies+1, 13)
         colnames(statsMatrix)<-c("FAMILY_#","METHOD_#","SELECTED", "FAM FDR", "FAM FWER", "FR", "POWER", "AVG FDR", "AVG FWER","OVR FR", "OVR POWER", "OVR FDR", "OVR FWER")
@@ -502,12 +503,20 @@ tukeyTestSplit<-function (n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1
     
     ##parallelized loop to iterate thru deltas and run the iters on each delta 
     ## and each xbar vector
-    wb<-loadWorkbook(paste("TukeyTest "," n=",n,".xls"), create = TRUE)
+    vecString=paste(DesVector, collapse= ",")
+    wb<-loadWorkbook(filename=
+                         paste(
+                             "TukeyTest ",
+                             format(Sys.time(), "%d%m%y-%H-%M"),
+                             "DesVector=",  vecString, 
+                             # "TotalTime:", totalTime,
+                             "n=",n,".xls"),
+                     create = TRUE)
     
-    for (delta in seq(0,3,0.5)){
+    for (delta in seq(mindelta,maxdelta,interval)){
         print ("current Design Vector:")
         print (DesVector*delta)
-        wrapper.res = foreach(j=1:n , .export=function.names , .packages='foreach') %dopar% {
+        wrapper.res = foreach(j=1:n , .export=function.names , .packages='foreach') %do% {
             
             res=iteration(xbars=random.res[[j]], numOfSignalFamilies=numOfSignalFamilies, 
                           numOfGroups=numOfGroups, groupSize=groupSize, delta=delta,
@@ -536,7 +545,6 @@ tukeyTestSplit<-function (n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1
         createSheet(wb, name =  paste("SD", delta))
         writeWorksheet(wb, round(wrapper.res2sd[is.na(wrapper.res2[,"FAMILY_#"]),],5), sheet =  paste("SD", delta))
         
-        
     }
     stopCluster(cl)
     saveWorkbook(wb)
@@ -554,4 +562,34 @@ tukeyTestSplit<-function (n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1
     print(strtrim(totalTime,6))
     # write.csv(simplify2array(wrapper.res),"output.csv")
     
+}
+
+
+
+N=10000
+
+#Series Of Tests:
+for (m1 in c(10,50,100,1000)){
+  for (m in c(1000,10000)){
+    tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+               ,DesVector=c(0,0,1), details=FALSE)
+#     tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+#                ,DesVector=c(-1,0,1), details=FALSE)
+#     tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+#                ,DesVector=c(-1,0,1,2), details=FALSE)
+#     tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+#                ,DesVector=c(-1,0,0,1), details=FALSE)
+#     tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+#                ,DesVector=c(-1,-1,-1,1,1,1), details=FALSE)
+#     tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+#                ,DesVector=c(-1,-1,0,0,1,1), details=FALSE)
+#     tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+#                ,DesVector=c(-2,-1,0,0,1,2), details=FALSE)
+#     tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+#                ,DesVector=c(-1,-1,-1,-1,-1,1,1,1,1,1), details=FALSE)
+#     tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+#               ,DesVector=c(-2,-2,-1,-1,0,0,1,1,2,2), details=FALSE)
+#     tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+#                ,DesVector=c(-3,-2,-1,0,0,0,0,1,2,3), details=FALSE)
+  }
 }
