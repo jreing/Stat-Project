@@ -507,9 +507,10 @@ tukeyTestSplit<-function (n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1
     wb<-loadWorkbook(filename=
                          paste(
                              "TukeyTest ",
-                             format(Sys.time(), "%d%m%y-%H-%M"),
+                             format(Sys.time(), "%d%m%y%H%M"),
                              "DesVector=",  vecString, 
-                             # "TotalTime:", totalTime,
+                              # "TotalTime:", totalTime,
+                             "NumOfSignalFamilies",numOfSignalFamilies,
                              "n=",n,".xls"),
                      create = TRUE)
     
@@ -574,23 +575,31 @@ for (m1 in c(10,50,100,1000)){
     tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
                ,DesVector=c(0,0,1), details=FALSE)
       gc()
-#     tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
-#                ,DesVector=c(-1,0,1), details=FALSE)
-#     tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
-#                ,DesVector=c(-1,0,1,2), details=FALSE)
-#     tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
-#                ,DesVector=c(-1,0,0,1), details=FALSE)
-#     tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
-#                ,DesVector=c(-1,-1,-1,1,1,1), details=FALSE)
-#     tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
-#                ,DesVector=c(-1,-1,0,0,1,1), details=FALSE)
-#     tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
-#                ,DesVector=c(-2,-1,0,0,1,2), details=FALSE)
-#     tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
-#                ,DesVector=c(-1,-1,-1,-1,-1,1,1,1,1,1), details=FALSE)
-#     tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
-#               ,DesVector=c(-2,-2,-1,-1,0,0,1,1,2,2), details=FALSE)
-#     tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
-#                ,DesVector=c(-3,-2,-1,0,0,0,0,1,2,3), details=FALSE)
+    tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+               ,DesVector=c(-1,0,1), details=FALSE)
+    gc()
+    tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+               ,DesVector=c(-1,0,1,2), details=FALSE)
+    gc()
+    tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+               ,DesVector=c(-1,0,0,1), details=FALSE)
+    gc()
+    tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+               ,DesVector=c(-1,-1,-1,1,1,1), details=FALSE)
+    gc()
+    tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+               ,DesVector=c(-1,-1,0,0,1,1), details=FALSE)
+    gc()
+    tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+               ,DesVector=c(-2,-1,0,0,1,2), details=FALSE)
+    gc()
+    tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+               ,DesVector=c(-1,-1,-1,-1,-1,1,1,1,1,1), details=FALSE)
+    gc()
+    tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+              ,DesVector=c(-2,-2,-1,-1,0,0,1,1,2,2), details=FALSE)
+    gc()
+    tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+               ,DesVector=c(-3,-2,-1,0,0,0,0,1,2,3), details=FALSE)
   }
 }
