@@ -1,5 +1,7 @@
+library ('XLConnect')
+
 TukeyGraphs <-
-    function (name = "TukeyTest  2901161624 DesVector= -2,-1,0,0,1,2 n= 10000 .xls",
+    function (name ,
               withSD = FALSE, mindelta = 1, maxdelta = 2, interval =
                   0.5, n = 10000) {
         #withSD means that the sd will appear in parenthesis
@@ -22,9 +24,9 @@ TukeyGraphs <-
             startRow = 1, endRow = 5,
             startCol = 2, endCol = 13
         )
-        
+        print(DATA)
         COL_NAMES = colnames(DATA[[sheets[1]]])
-        # print (DATA[sheets[1]])
+        print (DATA[sheets[1]])
         print (length(sheets) / 2)
         for (col_name in COL_NAMES) {
             arrangedData[[col_name]] = matrix(NaN, 4, length(sheets) / 2)
@@ -32,22 +34,23 @@ TukeyGraphs <-
                 seq(mindelta,maxdelta,interval)
             rownames(arrangedData[[col_name]]) <- METHOD_NAMES
             for (delta in seq(mindelta,maxdelta,interval)) {
+                position=which(seq(mindelta,maxdelta,interval)==delta)
                 if (withSD == TRUE) {
-                    arrangedData[[col_name]][,(delta + 0.5) * 2 - 2] =
+                    arrangedData[[col_name]][,position] =
                         paste(DATA[[paste("MEANS",delta)]][,col_name],
                               "(",
                               DATA[[paste("SD",delta)]][,col_name],
                               ")")
                 }
                 else{
-                    arrangedData[[col_name]][,(delta + 0.5) * 2 - 2] <-
+                    arrangedData[[col_name]][,position] <-
                         DATA[[paste("MEANS",delta)]][,col_name]
                 }
             }
             
             #
         }
-        # print (arrangedData)
+        print (arrangedData)
         
         ##exporting arranged table to a new Excel file
         wb2 <- loadWorkbook(filename = paste("ARRANGED", name), create = TRUE)
@@ -56,6 +59,11 @@ TukeyGraphs <-
             createSheet(wb2, name = col_name)
             writeWorksheet(wb2, cbind(METHOD_NAMES,arrangedData[[col_name]]), sheet =
                                col_name)
+            ##make width better in xl file
+            for (i in 1:13){
+                setColumnWidth(wb2, sheet =
+                               col_name,column=i, width = 5000)
+            }
         }
         saveWorkbook(wb2)
         
@@ -284,11 +292,51 @@ TukeyGraphs <-
         }
         
     }
-TukeyGraphs()
+###########################33
 
-# for (f in list.files()) {
+
+TukeyXLCreate <-function (filename, mindelta=0.1, maxdelta=1, interval=0.3){
+   load(filename) 
+   filename=strsplit(filename,"\\.")[1]
+   print(filename)
+   wb<-loadWorkbook(filename=paste(filename, "res.xls")
+                    , create = TRUE)
+   for (delta in seq(mindelta,maxdelta,interval)){
+       createSheet(wb, name =  paste("MEANS", delta))
+       writeWorksheet(wb, round(deltaRes[[delta]][[1]],5), sheet =  paste("MEANS", delta))
+       createSheet(wb, name =  paste("SD",  delta))
+       writeWorksheet(wb, round(deltaRes[[delta]][[2]],5), sheet =  paste("SD", delta))
+       
+   }
+   
+   saveWorkbook(wb)
+}
+
+# createSheet(wb, name = paste("MEANS", delta))
+# writeWorksheet(wb, round(wrapper.res2[is.na(wrapper.res2[,"FAMILY_#"]),],5), sheet =  paste("MEANS", delta))
+# createSheet(wb, name =  paste("SD", delta))
+# writeWorksheet(wb, round(wrapper.res2sd[is.na(wrapper.res2[,"FAMILY_#"]),],5), sheet =  paste("SD", delta))
+
+
+# 
+# TukeyGraphs()
+# 
+# file_list=list.files()
+# files=file_list[grepl(".data",file_list)]
+# for (f in files) {
+#     #print (f)
+#     TukeyXLCreate(f)
 #     TukeyGraphs (
 #         name = f, withSD = TRUE, mindelta = 1, maxdelta = 2
 #     )
 # }
 
+for (f in list.files()) {
+    print (f)
+    
+    TukeyGraphs (
+        name = f, withSD = TRUE, mindelta = 0.1, maxdelta = 1,
+        interval=0.3
+    )
+     
+}

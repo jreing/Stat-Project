@@ -41,7 +41,8 @@ Preject <- function (method="BH", pvals=c(0), details=FALSE, alpha =0.05){
 }
 
 
-getRandomXBars <-function (size=-1, numOfTrues=-1, truesMu1=0, falsesMu1, sd=1,DesVector=NaN,details=FALSE){
+getRandomXBars <-function (size=-1, numOfTrues=-1, truesMu1=0, 
+                           falsesMu1, sd=1,DesVector=NaN,details=FALSE, rows=1){
     #if there's a Design vector supplied, normals will be generated according to it
     # otherwise the xbars will be made with the given parameters.
     
@@ -54,7 +55,7 @@ getRandomXBars <-function (size=-1, numOfTrues=-1, truesMu1=0, falsesMu1, sd=1,D
     }
     else{
         xbar<- rep(NA,length(DesVector)) #init xbar
-        xbar<- (rnorm(n=length(DesVector),mean=DesVector,sd=sd))   
+        xbar<- (rnorm(n=length(DesVector)*rows,mean=DesVector,sd=sd))   
     }
     if (details==TRUE){
         print (DesVector)
@@ -87,7 +88,7 @@ countFalseRejections<-function (rejects , refVec,details=FALSE){
         
     }
     if (rejects$length==0){ #if there were no rejects at all
-        print ("0 rejects")
+        # print ("0 rejects")
         return (0)
     }
     
@@ -100,10 +101,10 @@ countFalseRejections<-function (rejects , refVec,details=FALSE){
         }
     }
     # print(c("Total false rejections:" , fr))
-    if (fr>0){
-        print(c("Rejects:" , rejects, "Ref vec:"))
-        print (refVec)
-    }
+#     if (fr>0){
+#         print(c("Rejects:" , rejects, "Ref vec:"))
+#         print (refVec)
+#     }
     return (fr) 
 }
 
@@ -112,8 +113,8 @@ countFalseFamilyRejections <- function (rejects, numOfSignalFamilies){
     if (rejects$length==0){ #if there were no rejects at all
         return (0)
     }
-    print ("false family rejections:")
-    print (which(rejects$ix>numOfSignalFamilies))
+    # print ("false family rejections:")
+    # print (which(rejects$ix>numOfSignalFamilies))
     return (length(which(rejects$ix>numOfSignalFamilies)))
 }
 
@@ -262,7 +263,7 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups,
                                                  numOfGroups,
                                                  details=FALSE)
             }
-            print(pairwisePVals)
+            # print(pairwisePVals)
             #     print (refVec)
         }
         if (methodix==1 || methodix == 2){
@@ -276,7 +277,7 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups,
         if (methodix==4){
             # print(pairwisePVals)
             familiesSimesPVals=calcSimesPVals(pairwisePVals)
-            print(familiesSimesPVals)
+            # print(familiesSimesPVals)
             # readline()
             
         }
@@ -397,7 +398,7 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups,
             #calc frs,power,fdr,fwer for the ith selectedfamily
             
             statsMatrix[SelectedFamilies$ix[i], "FR"]=
-                countFalseRejections(rejects=Level2Rejects, refVec=refVec,details=TRUE)
+                countFalseRejections(rejects=Level2Rejects, refVec=refVec,details=FALSE)
             statsMatrix[SelectedFamilies$ix[i], "POWER"]=
                 calcPower(Level2Rejects$length,
                           statsMatrix[SelectedFamilies$ix[i], "FR"], 
@@ -423,9 +424,9 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups,
                      falseRejections = statsMatrix[numOfFamilies+1,"OVR FR"] )
         
         
-        print (c("Overall2ndPhaseRejects",Overall2ndPhaseRejects, "OVR FR", statsMatrix[numOfFamilies+1,"OVR FR"],
-                 "size " , choose (ncol(xbars),2)*numOfFamilies, 
-                 "numOfFalseH0sInRef", OverallNumOfFalseH0s))
+#         print (c("Overall2ndPhaseRejects",Overall2ndPhaseRejects, "OVR FR", statsMatrix[numOfFamilies+1,"OVR FR"],
+#                  "size " , choose (ncol(xbars),2)*numOfFamilies, 
+#                  "numOfFalseH0sInRef", OverallNumOfFalseH0s))
         # readline()
         
         statsMatrix[numOfFamilies+1,"OVR POWER"]=
@@ -437,13 +438,17 @@ iteration <-function  (xbars, numOfSignalFamilies, numOfGroups,
             statsMatrix[numOfFamilies+1,"AVG FDR"]=0
             statsMatrix[numOfFamilies+1,"AVG FWER"]=0
         }
-        # print("this is statsMatrix:")
-        # print(statsMatrix)
-        res[[methodix]]=statsMatrix;
+#          print("this is statsMatrix:")
+#          print(statsMatrix[numOfFamilies+1,])
+#          
+         
+        res[[methodix]]=statsMatrix[numOfFamilies+1,];
         
     } #end methodix loop
     res=rbind(res[[1]], res[[2]], res[[3]], res[[4]])
+    
     # print(res)
+    # readline()
     return (res)
 }
 
@@ -478,83 +483,112 @@ tukeyTestSplit<-function (n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1
     nr.cores=4
     cl = makeCluster(nr.cores)
     registerDoParallel(cl)
+   
+    vecString=paste(DesVector, collapse= ",")
+    FILENAME=paste(
+        "TukeyTest ",
+        format(Sys.time(), "%d%m%y%H%M"),
+        "DesVector=",  vecString, 
+        # "TotalTime:", totalTime,
+        "NumOfSignalFamilies",numOfSignalFamilies,
+        "NumOfFamilies", numOfFamilies,
+        "n=",n,".xls")
     
     ##parallellized loop to gain all xbars to be used in simulation 
     random.res = foreach(j=1:n , .export=function.names , .packages='foreach') %dopar% {
         #first numOfSignalFamilies with signal
-        xbars<-NULL
         
+       
         #we get random XBars using sd equals to sqrt(1/groupSize) for the signal 
         #families
         
-        for (i in 1:numOfSignalFamilies){
-            xbars<-rbind(xbars,getRandomXBars(sd=sqrt(1/groupSize),
-                                              DesVector=DesVector))
-        }
+        noSigXBars<-matrix( getRandomXBars(
+                                    sd=sqrt(1/groupSize),
+                                    DesVector=DesVector, 
+                                    rows=numOfSignalFamilies
+                                    )
+                            , nrow=numOfSignalFamilies
+                            , ncol=numOfGroups, byrow=TRUE)
+        # print(noSigXBars)
+        
         #no signal families
-        for (i in 1:(numOfFamilies-numOfSignalFamilies)){
-            xbars<-rbind(xbars,getRandomXBars(sd=sqrt(1/groupSize),
-                                              DesVector=rep(0,length(DesVector)) ))
-        }
-        res=xbars;
+        SigXBars<-matrix( getRandomXBars(
+                                sd=sqrt(1/groupSize),
+                                DesVector=rep(0,length(DesVector)),
+                                rows =numOfFamilies-numOfSignalFamilies
+                                ),
+                          nrow =numOfFamilies-numOfSignalFamilies,
+                          ncol =numOfGroups, byrow=TRUE)
+        
+        # print(SigXBars) 
+    
+        res=rbind(noSigXBars, SigXBars);
         
     }
-    # print (random.res)
-    
+    save (random.res, file = paste (FILENAME, "random xbars"))
+	print ("Finished: recieved all random Xbars")
+#     # print (random.res)
+#     
+#     load("xbars001a")
+#     print ("xbars loaded")
+	
     ##parallelized loop to iterate thru deltas and run the iters on each delta 
     ## and each xbar vector
-    vecString=paste(DesVector, collapse= ",")
-    wb<-loadWorkbook(filename=
-                         paste(
-                             "TukeyTest ",
-                             format(Sys.time(), "%d%m%y%H%M"),
-                             "DesVector=",  vecString, 
-                              # "TotalTime:", totalTime,
-                             "NumOfSignalFamilies",numOfSignalFamilies,
-                             "n=",n,".xls"),
+	
+    wb<-loadWorkbook(filename=FILENAME,
                      create = TRUE)
-    
-    for (delta in seq(mindelta,maxdelta,interval)){
-        print ("current Design Vector:")
-        print (DesVector*delta)
-        wrapper.res = foreach(j=1:n , .export=function.names , .packages='foreach') %dopar% {
-            
-            res=iteration(xbars=random.res[[j]], numOfSignalFamilies=numOfSignalFamilies, 
+    print ("current Design Vector:")
+    print (DesVector)
+    deltaRes=foreach (delta= seq(mindelta,maxdelta,interval), .export=function.names) %dopar%{ 
+        sumX=iteration(xbars=random.res[[1]], numOfSignalFamilies=numOfSignalFamilies, 
                           numOfGroups=numOfGroups, groupSize=groupSize, delta=delta,
                           methodix=NULL, DesVector=DesVector)
-            
+        sumX2=sumX^2
+        
+        #sd= sum(x_i^2)+2*mean*sum(x_i)+n*mean^2
+        
+        for (j in 2:n){
+            print (j)
+            #if (j %% 100 ==0) print (j)
+            iter=iteration(xbars=random.res[[j]], numOfSignalFamilies=numOfSignalFamilies, 
+                              numOfGroups=numOfGroups, groupSize=groupSize, delta=delta,
+                              methodix=NULL, DesVector=DesVector)
+            sumX=sumX+iter
+            sumX2=sumX2+iter^2
+            # }
+#             save (wrapper.res, file = paste(FILENAME, "DATA PART" ,k ))
+#             print (paste("data part ", k , "was saved"))
+#             # print (wrapper.res)
+#             rm(wrapper.res)
         }
-        
-        # print (wrapper.res)
-        
         #wrapping it up together into means and SDs
-        l=length(wrapper.res)
+        
+        # l=length(wrapper.res)
+        
         print ("means:")
-        wrapper.res2=apply(simplify2array(wrapper.res), 1:2, mean)
-        print ("sds:")
-        wrapper.res2sd=apply(simplify2array(wrapper.res), 1:2, sd)/sqrt(l)
+        EofX=sumX/n
+        EofX2=sumX2/n
+        wrapper.res2=EofX
+        wrapper.res2sd= sqrt(EofX2-EofX^2)
         
-        #GOOD OUTPUT:
-        print (wrapper.res2[!is.na(wrapper.res2[,"FAM FDR"]),]) 
-        print (wrapper.res2[is.na(wrapper.res2[,"FAMILY_#"]),]) 
-        print (wrapper.res2sd[is.na(wrapper.res2[,"FAMILY_#"]),]) 
-        
-        #EXPORT CURRENT RESULT TO EXCEL:
-        
-        createSheet(wb, name = paste("MEANS", delta))
-        writeWorksheet(wb, round(wrapper.res2[is.na(wrapper.res2[,"FAMILY_#"]),],5), sheet =  paste("MEANS", delta))
-        createSheet(wb, name =  paste("SD", delta))
-        writeWorksheet(wb, round(wrapper.res2sd[is.na(wrapper.res2[,"FAMILY_#"]),],5), sheet =  paste("SD", delta))
-        
+        deltaRes=list(wrapper.res2, wrapper.res2sd)
     }
     stopCluster(cl)
-    saveWorkbook(wb)
-    print (c("# of iterations:" , l))  
-    #   stats<-iteration(xbars=xbars, numOfSignalFamilies=numOfSignalFamilies, 
-    #                    numOfGroups=numOfGroups, groupSize=groupSize, delta=1,methodix=methodix, DesVector=DesVector)
-    #print only rows representing families that were rejected
-    # print (stats[!is.na(stats[,"FAM FDR"]),])
     
+    #GOOD OUTPUT:
+    print (deltaRes)
+    save (deltaRes,file=paste(FILENAME,".data"))
+
+    #EXPORT CURRENT RESULT TO EXCEL:
+        
+#     createSheet(wb, name = paste("MEANS", delta))
+#     writeWorksheet(wb, round(wrapper.res2[is.na(wrapper.res2[,"FAMILY_#"]),],5), sheet =  paste("MEANS", delta))
+#     createSheet(wb, name =  paste("SD", delta))
+#     writeWorksheet(wb, round(wrapper.res2sd[is.na(wrapper.res2[,"FAMILY_#"]),],5), sheet =  paste("SD", delta))
+#     
+    
+    # saveWorkbook(wb)
+    print (c("# of iterations:" , n))  
     #stop timer
     totalTime= (proc.time()-ptm)[3]
     
@@ -565,41 +599,47 @@ tukeyTestSplit<-function (n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1
     
 }
 
-
+# tukeyTestSplit(n=3,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+#                                ,DesVector=c(0,0,1), details=FALSE)
+#                
 
 N=10000
+INTERVAL=0.3
+MINDELTA=0.1
+MAXDELTA=1
 
 #Series Of Tests:
 for (m1 in c(10,50,100,1000)){
-  for (m in c(1000,10000)){
-    tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
-               ,DesVector=c(0,0,1), details=FALSE)
-      gc()
-    tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
-               ,DesVector=c(-1,0,1), details=FALSE)
-    gc()
-    tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
-               ,DesVector=c(-1,0,1,2), details=FALSE)
-    gc()
-    tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
-               ,DesVector=c(-1,0,0,1), details=FALSE)
-    gc()
-    tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
-               ,DesVector=c(-1,-1,-1,1,1,1), details=FALSE)
-    gc()
-    tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
-               ,DesVector=c(-1,-1,0,0,1,1), details=FALSE)
-    gc()
-    tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
-               ,DesVector=c(-2,-1,0,0,1,2), details=FALSE)
-    gc()
-    tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+   for (m in c(1000,10000)){
+       # for (m in c(10000)){
+#     tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=INTERVAL, mindelta=MINDELTA, maxdelta=MAXDELTA
+#                ,DesVector=c(0,0,1), details=FALSE)
+#       gc()
+#     tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=INTERVAL, mindelta=MINDELTA, maxdelta=MAXDELTA
+#                ,DesVector=c(-1,0,1), details=FALSE)
+#     gc()
+#     tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=INTERVAL, mindelta=MINDELTA, maxdelta=MAXDELTA
+#                ,DesVector=c(-1,0,1,2), details=FALSE)
+#     gc()
+#     tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=INTERVAL, mindelta=MINDELTA, maxdelta=MAXDELTA
+#                ,DesVector=c(-1,0,0,1), details=FALSE)
+#     gc()
+#     tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=INTERVAL, mindelta=MINDELTA, maxdelta=MAXDELTA
+#                ,DesVector=c(-1,-1,-1,1,1,1), details=FALSE)
+#     gc()
+#     tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=INTERVAL, mindelta=MINDELTA, maxdelta=MAXDELTA
+#                ,DesVector=c(-1,-1,0,0,1,1), details=FALSE)
+#     gc()
+#     tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=INTERVAL, mindelta=MINDELTA, maxdelta=MAXDELTA
+#                ,DesVector=c(-2,-1,0,0,1,2), details=FALSE)
+#     gc()
+    tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=INTERVAL, mindelta=MINDELTA, maxdelta=MAXDELTA
                ,DesVector=c(-1,-1,-1,-1,-1,1,1,1,1,1), details=FALSE)
     gc()
-    tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+    tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=INTERVAL, mindelta=MINDELTA, maxdelta=MAXDELTA
               ,DesVector=c(-2,-2,-1,-1,0,0,1,1,2,2), details=FALSE)
     gc()
-    tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
+    tukeyTestSplit(n=N,numOfSignalFamilies=m1, numOfFamilies=m,interval=INTERVAL, mindelta=MINDELTA, maxdelta=MAXDELTA
                ,DesVector=c(-3,-2,-1,0,0,0,0,1,2,3), details=FALSE)
   }
 }
