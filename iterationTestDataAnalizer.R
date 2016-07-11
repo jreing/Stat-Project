@@ -335,7 +335,7 @@ for (f in list.files()) {
     print (f)
     
     TukeyGraphs (
-        name = f, withSD = TRUE, mindelta = 0.1, maxdelta = 1,
+        name = f, withSD = FALSE, mindelta = 0.1, maxdelta = 1,
         interval=0.3
     )
      
