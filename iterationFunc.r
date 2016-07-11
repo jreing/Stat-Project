@@ -600,7 +600,7 @@ tukeyTestSplit<-function (n=10000, numOfFamilies=40, numOfGroups=3, numOfTrues=1
 }
 
 # tukeyTestSplit(n=3,numOfSignalFamilies=m1, numOfFamilies=m,interval=0.5, mindelta=1, maxdelta=2
-#                                ,DesVector=c(0,0,1), details=FALSE)
+#                               ,DesVector=c(0,0,1), details=FALSE)
 #                
 
 N=10000
